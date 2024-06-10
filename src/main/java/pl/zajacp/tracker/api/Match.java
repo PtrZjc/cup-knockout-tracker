@@ -18,4 +18,8 @@ public record Match
             throw new IllegalMatchException("Match is finished but no result provided");
         }
     }
+
+    public Match finishWithResult(MatchResult result) {
+        return new Match(teamA, teamB, tournamentStage, MatchStatus.FINISHED, result);
+    }
 }

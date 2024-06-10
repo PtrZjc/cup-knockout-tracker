@@ -128,7 +128,7 @@ public class WorldCupTrackerTest {
         // when then
         assertThatThrownBy(() -> tracker.recordMatchResult(FRANCE, ARGENTINA, REGULAR_MATCH_RESULT))
                 .isInstanceOf(MatchNotFoundException.class)
-                .hasMessageContaining("No match found between home team FRANCE and away team BRAZIL");
+                .hasMessageContaining("No match found between FRANCE and ARGENTINA");
     }
 
     @Disabled
