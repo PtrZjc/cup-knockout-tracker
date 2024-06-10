@@ -19,10 +19,11 @@ public interface WorldCupTracker {
      * Initializes the Round of 16 World Cup stage with a specified list of teams.
      *
      * @param teams the list of teams participating in the Round of 16, must be exactly 16 unique teams
+     * @return a list of {@link Match} objects representing the initial Round of 16 matches
      * @throws InvalidTeamCountException if the list does not contain exactly 16 teams
      * @throws DuplicateTeamsException   if there are duplicate teams in the list
      */
-    void startWorldCup(List<Team> teams);
+    List<Match> startWorldCup(List<Team> teams);
 
     /**
      * Records the result of a match in the World Cup. Updates the match status to FINISHED and,

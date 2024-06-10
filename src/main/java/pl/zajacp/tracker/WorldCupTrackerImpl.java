@@ -5,11 +5,12 @@ import pl.zajacp.tracker.api.MatchResult;
 import pl.zajacp.tracker.api.Team;
 
 import java.util.List;
+import java.util.Set;
 
 public class WorldCupTrackerImpl implements WorldCupTracker {
     @Override
-    public void startWorldCup(List<Team> teams) {
-
+    public List<Match> startWorldCup(List<Team> teams) {
+        return List.of();
     }
 
     @Override
@@ -18,8 +19,8 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
     }
 
     @Override
-    public List<Match> getMatches() {
-        return List.of();
+    public Set<Match> getMatches() {
+        return Set.of();
     }
 
     @Override
