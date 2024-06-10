@@ -1,4 +1,4 @@
-package pl.zajacp.tracker.model;
+package pl.zajacp.tracker.api;
 
 import lombok.NonNull;
 
