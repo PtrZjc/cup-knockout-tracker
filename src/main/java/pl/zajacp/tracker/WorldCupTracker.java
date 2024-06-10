@@ -18,7 +18,8 @@ public interface WorldCupTracker {
     /**
      * Initializes the Round of 16 World Cup stage with a specified list of teams.
      *
-     * @param teams the list of teams participating in the Round of 16, must be exactly 16 unique teams
+     * @param teams the list of teams participating in the Round of 16, must be exactly 16 unique teams.
+     *              Teams will be paired in the order they appear in the list.
      * @return a list of {@link Match} objects representing the initial Round of 16 matches
      * @throws InvalidTeamCountException if the list does not contain exactly 16 teams
      * @throws DuplicateTeamsException   if there are duplicate teams in the list
@@ -41,11 +42,13 @@ public interface WorldCupTracker {
     Match recordMatchResult(Team teamA, Team teamB, MatchResult matchResult);
 
     /**
-     * Retrieves all matches in the World Cup.
+     * Retrieves a list of all matches in the World Cup,
+     * ordered by place they were added or chronologically finished.
+     * This order reflects the progression through the tournament stages from the Round of 16 onward.
      *
-     * @return a set of Match objects, each representing a scheduled or completed match in the World Cup
+     * @return a list of Match objects, each representing a scheduled or completed match in the World Cup
      */
-    Set<Match> getMatches();
+    List<Match> getMatches();
 
     /**
      * Returns the string summary of all stages of the World Cup. The summary includes completed and upcoming matches,

@@ -21,7 +21,7 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
         if (teams.size() != 16) {
             throw new InvalidTeamCountException(teams.size());
         }
-        if (new HashSet<>(teams).size() != 16) {
+        if (Set.copyOf(teams).size() != 16) {
             throw new DuplicateTeamsException();
         }
 
@@ -37,8 +37,8 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
     }
 
     @Override
-    public Set<Match> getMatches() {
-        return Set.of();
+    public List<Match> getMatches() {
+        return List.copyOf(matches);
     }
 
     @Override
