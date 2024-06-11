@@ -22,4 +22,18 @@ public record Match
     public Match finishWithResult(MatchResult result) {
         return new Match(teamA, teamB, bracketPosition, MatchStatus.FINISHED, result);
     }
+
+    public Team getWinner() {
+        if (status != MatchStatus.FINISHED) {
+            throw new IllegalMatchException("Match is not finished yet");
+        }
+        if (finishedMatchResult.scoreTeamA() != finishedMatchResult.scoreTeamB()) {
+            return finishedMatchResult.scoreTeamA() > finishedMatchResult.scoreTeamB()
+                    ? teamA
+                    : teamB;
+        }
+        return finishedMatchResult.penaltyScoreTeamA().get() > finishedMatchResult.penaltyScoreTeamB().get()
+                ? teamA
+                : teamB;
+    }
 }
