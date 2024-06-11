@@ -28,8 +28,8 @@ public enum TournamentBracket {
     S_1(SEMI_FINALS),
     S_2(SEMI_FINALS),
 
-    F_GOLD(FINAL),
-    F_SILVER(FINAL);
+    F(FINAL),
+    F_THIRD_PLACE(FINAL);
 
     private final TournamentStage stage;
 
@@ -41,7 +41,8 @@ public enum TournamentBracket {
             case R_7, R_8 -> Q_4;
             case Q_1, Q_2 -> S_1;
             case Q_3, Q_4 -> S_2;
-            default -> throw new IllegalStateException("Can't determine next bracket without the winner");
+            case S_1, S_2 -> F;
+            default -> throw new IllegalStateException("There is are no next bracket for final matches");
         };
     }
 }

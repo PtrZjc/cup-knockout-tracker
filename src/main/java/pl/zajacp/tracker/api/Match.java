@@ -36,4 +36,8 @@ public record Match
                 ? teamA
                 : teamB;
     }
+
+    public Team getLoser() {
+        return teamA == getWinner() ? teamB : teamA;
+    }
 }

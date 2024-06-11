@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import pl.zajacp.tracker.api.Match;
 import pl.zajacp.tracker.api.MatchResult;
 import pl.zajacp.tracker.api.Team;
-import pl.zajacp.tracker.api.TournamentBracket;
 import pl.zajacp.tracker.api.exception.DuplicateTeamsException;
 import pl.zajacp.tracker.api.exception.InvalidTeamCountException;
 import pl.zajacp.tracker.api.exception.InvalidTeamOrderException;
@@ -13,6 +12,7 @@ import pl.zajacp.tracker.api.exception.MatchAlreadyCompletedException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,9 +35,20 @@ import static pl.zajacp.tracker.api.Team.PORTUGAL;
 import static pl.zajacp.tracker.api.Team.SPAIN;
 import static pl.zajacp.tracker.api.Team.SWITZERLAND;
 import static pl.zajacp.tracker.api.Team.URUGUAY;
-import static pl.zajacp.tracker.api.TournamentBracket.*;
+import static pl.zajacp.tracker.api.TournamentBracket.Q_1;
+import static pl.zajacp.tracker.api.TournamentBracket.Q_2;
+import static pl.zajacp.tracker.api.TournamentBracket.Q_3;
+import static pl.zajacp.tracker.api.TournamentBracket.Q_4;
+import static pl.zajacp.tracker.api.TournamentBracket.R_1;
+import static pl.zajacp.tracker.api.TournamentBracket.R_2;
+import static pl.zajacp.tracker.api.TournamentBracket.R_3;
+import static pl.zajacp.tracker.api.TournamentBracket.R_4;
+import static pl.zajacp.tracker.api.TournamentBracket.R_5;
+import static pl.zajacp.tracker.api.TournamentBracket.R_6;
+import static pl.zajacp.tracker.api.TournamentBracket.R_7;
+import static pl.zajacp.tracker.api.TournamentBracket.R_8;
 import static pl.zajacp.tracker.api.TournamentStage.FINAL;
-import static pl.zajacp.tracker.api.TournamentStage.ROUND_OF_16;
+import static pl.zajacp.tracker.api.TournamentStage.QUARTER_FINALS;
 import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
 
 
@@ -227,9 +238,13 @@ public class WorldCupTrackerTest {
                 .hasSize(8);
 
         assertThat(initalizedQuarterFinalMatches)
-                .filteredOn(match -> match.tournamentStage() == ROUND_OF_16)
-                .hasSize(4)
-                .allSatisfy(match -> assertThat(match.status()).isEqualTo(PLANNED));
+                .filteredOn(match -> match.bracketPosition().getStage() == QUARTER_FINALS)
+                .containsExactlyInAnyOrder(
+                        new Match(FRANCE, GERMANY, Q_1, PLANNED, null),
+                        new Match(SPAIN, BELGIUM, Q_2, PLANNED, null),
+                        new Match(PORTUGAL, URUGUAY, Q_3, PLANNED, null),
+                        new Match(DENMARK, COLOMBIA, Q_4, PLANNED, null)
+                );
     }
 
     @Test
@@ -239,8 +254,9 @@ public class WorldCupTrackerTest {
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
 
         tracker.getMatches().stream()
-                .filter(m -> m.status() == PLANNED)
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+
+        Set<Team> expectedTeamsInSemiFinals = Set.of(FRANCE, SPAIN, PORTUGAL, DENMARK);
 
         // when
         var initalizedSemiFinalMatches = tracker.getMatches();
@@ -251,9 +267,13 @@ public class WorldCupTrackerTest {
                 .hasSize(8 + 4);
 
         assertThat(initalizedSemiFinalMatches)
-                .filteredOn(match -> match.tournamentStage() == SEMI_FINALS)
-                .hasSize(2)
-                .allSatisfy(match -> assertThat(match.status()).isEqualTo(PLANNED));
+                .filteredOn(match -> match.bracketPosition().getStage() == SEMI_FINALS)
+                .hasSize(2) // nondeterministic test result after quarter finals
+                .allSatisfy(match -> {
+                    assertThat(match.status()).isEqualTo(PLANNED);
+                    assertThat(expectedTeamsInSemiFinals).contains(match.teamA());
+                    assertThat(expectedTeamsInSemiFinals).contains(match.teamB());
+                });
     }
 
     @Test
@@ -266,6 +286,12 @@ public class WorldCupTrackerTest {
                 .filter(m -> m.status() == PLANNED)
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
 
+        tracker.getMatches().stream()
+                .filter(m -> m.status() == PLANNED)
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+
+        Set<Team> expectedTeamsInFinals = Set.of(FRANCE, SPAIN, PORTUGAL, DENMARK);
+
         // when
         var initalizedFinalMatches = tracker.getMatches();
 
@@ -275,8 +301,13 @@ public class WorldCupTrackerTest {
                 .hasSize(8 + 4 + 2);
 
         assertThat(initalizedFinalMatches)
-                .filteredOn(match -> match.tournamentStage() == FINAL)
-                .hasSize(2)
-                .allSatisfy(match -> assertThat(match.status()).isEqualTo(PLANNED));
+                .filteredOn(match -> match.bracketPosition().getStage() == FINAL)
+                .hasSize(2)  // nondeterministic test result after quarter finals
+                .allSatisfy(match -> {
+                            assertThat(match.status()).isEqualTo(PLANNED);
+                            assertThat(expectedTeamsInFinals).contains(match.teamA());
+                            assertThat(expectedTeamsInFinals).contains(match.teamB());
+                        }
+                );
     }
 }

@@ -12,6 +12,7 @@ import pl.zajacp.tracker.api.exception.InvalidTeamOrderException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,11 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import static pl.zajacp.tracker.api.TournamentBracket.F_THIRD_PLACE;
+import static pl.zajacp.tracker.api.TournamentStage.ROUND_OF_16;
+import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
 
 public class WorldCupTrackerImpl implements WorldCupTracker {
 
@@ -37,11 +41,14 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
         }
 
         var initialBracketPositions = Arrays.stream(TournamentBracket.values())
-                .filter(b -> b.getStage() == TournamentStage.ROUND_OF_16)
+                .filter(b -> b.getStage() == ROUND_OF_16)
                 .toList();
 
         IntStream.rangeClosed(0, 7).forEach(i -> {
-            var match = Match.of(teams.get(2 * i), teams.get(2 * i + 1), initialBracketPositions.get(i));
+            var match = Match.of(
+                    teams.get(2 * i),
+                    teams.get(2 * i + 1),
+                    initialBracketPositions.get(i));
             matches.put(MatchKey.of(match), match);
         });
 
@@ -74,14 +81,41 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
     }
 
     private void recalculateTournamentStage() {
-        var map = matches.values().stream()
-                .collect(groupingBy(Match::tournamentStage, toList()));
-        var lastCompletedStage = map.entrySet().stream()
+        boolean anyMatchUnfinished = matches.values().stream()
+                .anyMatch(m -> m.status() == MatchStatus.PLANNED);
+        if (anyMatchUnfinished) {
+            return;
+        }
+
+        Map<TournamentStage, List<Match>> matchesByStage = matches.values().stream()
+                .collect(groupingBy(m -> m.bracketPosition().getStage(), toList()));
+
+        TournamentStage lastCompletedStage = matchesByStage.entrySet().stream()
                 .filter(e -> e.getValue().stream().allMatch(m -> m.status() == MatchStatus.FINISHED))
                 .map(Map.Entry::getKey)
-                .collect(toSet());
+                .distinct()
+                .max(Comparator.comparingInt(TournamentStage::getOrderInCompetition))
+                .orElseThrow();
 
-//        var lastCompletedStage = Collections.min(completedStages);
+        List<Match> stageWinners = matchesByStage.get(lastCompletedStage).stream()
+                .map(BracketWinner::of)
+                .collect(groupingBy(bw -> bw.currentBracket.nextBracket(), mapping(BracketWinner::winningTeam, toList())))
+                .entrySet().stream()
+                .map(e -> Match.of(e.getValue().getFirst(), e.getValue().get(1), e.getKey()))
+                .toList();
+
+        if (lastCompletedStage == SEMI_FINALS) {
+            var thirdPlaceMatch = getThirdPlaceMatch(matchesByStage);
+            matches.put(MatchKey.of(thirdPlaceMatch), thirdPlaceMatch);
+        }
+        stageWinners.forEach(m -> matches.put(MatchKey.of(m), m));
+    }
+
+    private static Match getThirdPlaceMatch(Map<TournamentStage, List<Match>> matchesByStage) {
+        var thirdPlaceTeams = matchesByStage.get(SEMI_FINALS).stream()
+                .map(Match::getLoser)
+                .toList();
+        return Match.of(thirdPlaceTeams.get(0), thirdPlaceTeams.get(1), F_THIRD_PLACE);
     }
 
 
@@ -92,6 +126,12 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
 
         MatchKey inverted() {
             return new MatchKey(teamB(), teamA());
+        }
+    }
+
+    private record BracketWinner(Team winningTeam, TournamentBracket currentBracket) {
+        static BracketWinner of(Match match) {
+            return new BracketWinner(match.getWinner(), match.bracketPosition());
         }
     }
 }
