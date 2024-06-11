@@ -28,11 +28,10 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
             throw new DuplicateTeamsException();
         }
 
-        IntStream.rangeClosed(0, 7)
-                .forEach(i -> {
-                    var match = Match.of(teams.get(2 * i), teams.get(2 * i + 1));
-                    matches.put(MatchKey.of(match), match);
-                });
+        IntStream.rangeClosed(0, 7).forEach(i -> {
+            var match = Match.of(teams.get(2 * i), teams.get(2 * i + 1));
+            matches.put(MatchKey.of(match), match);
+        });
 
         return matches.values().stream().toList();
     }

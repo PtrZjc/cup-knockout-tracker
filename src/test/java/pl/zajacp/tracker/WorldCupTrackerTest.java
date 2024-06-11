@@ -8,6 +8,7 @@ import pl.zajacp.tracker.api.Team;
 import pl.zajacp.tracker.api.exception.DuplicateTeamsException;
 import pl.zajacp.tracker.api.exception.InvalidTeamCountException;
 import pl.zajacp.tracker.api.exception.InvalidTeamOrderException;
+import pl.zajacp.tracker.api.exception.MatchAlreadyCompletedException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
 import java.util.List;
@@ -33,7 +34,9 @@ import static pl.zajacp.tracker.api.Team.PORTUGAL;
 import static pl.zajacp.tracker.api.Team.SPAIN;
 import static pl.zajacp.tracker.api.Team.SWITZERLAND;
 import static pl.zajacp.tracker.api.Team.URUGUAY;
+import static pl.zajacp.tracker.api.TournamentStage.FINAL;
 import static pl.zajacp.tracker.api.TournamentStage.ROUND_OF_16;
+import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
 
 
 public class WorldCupTrackerTest {
@@ -99,12 +102,11 @@ public class WorldCupTrackerTest {
         tracker.startWorldCup(INITIAL_TEAMS);
 
         // when
-        var result = tracker.recordMatchResult(FRANCE, BRAZIL, REGULAR_MATCH_RESULT);
+        tracker.recordMatchResult(FRANCE, BRAZIL, REGULAR_MATCH_RESULT);
 
         // then
         assertThat(tracker.getMatches())
-                .filteredOn(match -> (match.teamA() == FRANCE && match.teamB() == BRAZIL) ||
-                        (match.teamA() == BRAZIL && match.teamB() == FRANCE))
+                .filteredOn(match -> match.teamA() == FRANCE && match.teamB() == BRAZIL)
                 .containsExactly(new Match(FRANCE, BRAZIL, ROUND_OF_16, FINISHED, REGULAR_MATCH_RESULT));
     }
 
@@ -135,24 +137,13 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldThrowMatchAlreadyCompletedExceptionIfUpdatingFinishedMatch() {
         // given
-        // when
-        // then
-    }
+        tracker.startWorldCup(INITIAL_TEAMS);
+        tracker.recordMatchResult(FRANCE, BRAZIL, REGULAR_MATCH_RESULT);
 
-    @Disabled
-    @Test
-    public void shouldRecordPenaltyShootoutCorrectlyForDrawMatch() {
-        // given
-        // when
-        // then
-    }
-
-    @Disabled
-    @Test
-    public void shouldThrowUnnecessaryPenaltyShootoutExceptionIfNotDraw() {
-        // given
-        // when
-        // then
+        // when then
+        assertThatThrownBy(() -> tracker.recordMatchResult(FRANCE, BRAZIL, REGULAR_MATCH_RESULT))
+                .isInstanceOf(MatchAlreadyCompletedException.class)
+                .hasMessageContaining("The match between FRANCE and BRAZIL has already been completed");
     }
 
     @Disabled
@@ -219,27 +210,71 @@ public class WorldCupTrackerTest {
         // then
     }
 
-    @Disabled
     @Test
     public void shouldCreateQuarterFinalMatchesAfterLastRoundOf16Match() {
         // given
+        tracker.startWorldCup(INITIAL_TEAMS)
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+
         // when
+        var initalizedQuarterFinalMatches = tracker.getMatches();
+
         // then
+        assertThat(initalizedQuarterFinalMatches).hasSize(8 + 4)
+                .filteredOn(match -> match.status() == FINISHED)
+                .hasSize(8);
+
+        assertThat(initalizedQuarterFinalMatches)
+                .filteredOn(match -> match.tournamentStage() == ROUND_OF_16)
+                .hasSize(4)
+                .allSatisfy(match -> assertThat(match.status()).isEqualTo(PLANNED));
     }
 
-    @Disabled
     @Test
     public void shouldCreateSemiFinalMatchesAfterLastQuarterFinalMatch() {
         // given
+        tracker.startWorldCup(INITIAL_TEAMS)
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+
+        tracker.getMatches().stream()
+                .filter(m -> m.status() == PLANNED)
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+
         // when
+        var initalizedSemiFinalMatches = tracker.getMatches();
+
         // then
+        assertThat(initalizedSemiFinalMatches).hasSize(8 + 4 + 2)
+                .filteredOn(match -> match.status() == FINISHED)
+                .hasSize(8 + 4);
+
+        assertThat(initalizedSemiFinalMatches)
+                .filteredOn(match -> match.tournamentStage() == SEMI_FINALS)
+                .hasSize(2)
+                .allSatisfy(match -> assertThat(match.status()).isEqualTo(PLANNED));
     }
 
-    @Disabled
     @Test
     public void shouldCreateFinalMatchAfterLastSemiFinalMatch() {
         // given
+        tracker.startWorldCup(INITIAL_TEAMS)
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+
+        tracker.getMatches().stream()
+                .filter(m -> m.status() == PLANNED)
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+
         // when
+        var initalizedFinalMatches = tracker.getMatches();
+
         // then
+        assertThat(initalizedFinalMatches).hasSize(8 + 4 + 2 + 2)
+                .filteredOn(match -> match.status() == FINISHED)
+                .hasSize(8 + 4 + 2);
+
+        assertThat(initalizedFinalMatches)
+                .filteredOn(match -> match.tournamentStage() == FINAL)
+                .hasSize(2)
+                .allSatisfy(match -> assertThat(match.status()).isEqualTo(PLANNED));
     }
 }
