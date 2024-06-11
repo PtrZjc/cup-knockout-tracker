@@ -6,11 +6,11 @@ import pl.zajacp.tracker.api.exception.IllegalMatchException;
 public record Match
         (@NonNull Team teamA,
          @NonNull Team teamB,
-         @NonNull TournamentStage tournamentStage,
+         @NonNull TournamentBracket bracketPosition,
          @NonNull MatchStatus status,
          MatchResult finishedMatchResult) {
-    public static Match of(Team teamA, Team teamB) {
-        return new Match(teamA, teamB, TournamentStage.ROUND_OF_16, MatchStatus.PLANNED, null);
+    public static Match of(Team teamA, Team teamB, TournamentBracket bracketPosition) {
+        return new Match(teamA, teamB, bracketPosition, MatchStatus.PLANNED, null);
     }
 
     public Match {
@@ -20,6 +20,6 @@ public record Match
     }
 
     public Match finishWithResult(MatchResult result) {
-        return new Match(teamA, teamB, tournamentStage, MatchStatus.FINISHED, result);
+        return new Match(teamA, teamB, bracketPosition, MatchStatus.FINISHED, result);
     }
 }

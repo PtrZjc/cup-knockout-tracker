@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import pl.zajacp.tracker.api.Match;
 import pl.zajacp.tracker.api.MatchResult;
 import pl.zajacp.tracker.api.Team;
+import pl.zajacp.tracker.api.TournamentBracket;
 import pl.zajacp.tracker.api.exception.DuplicateTeamsException;
 import pl.zajacp.tracker.api.exception.InvalidTeamCountException;
 import pl.zajacp.tracker.api.exception.InvalidTeamOrderException;
@@ -34,6 +35,7 @@ import static pl.zajacp.tracker.api.Team.PORTUGAL;
 import static pl.zajacp.tracker.api.Team.SPAIN;
 import static pl.zajacp.tracker.api.Team.SWITZERLAND;
 import static pl.zajacp.tracker.api.Team.URUGUAY;
+import static pl.zajacp.tracker.api.TournamentBracket.*;
 import static pl.zajacp.tracker.api.TournamentStage.FINAL;
 import static pl.zajacp.tracker.api.TournamentStage.ROUND_OF_16;
 import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
@@ -63,14 +65,14 @@ public class WorldCupTrackerTest {
 
         // then
         assertThat(result).containsExactly(
-                new Match(FRANCE, BRAZIL, ROUND_OF_16, PLANNED, null),
-                new Match(GERMANY, ARGENTINA, ROUND_OF_16, PLANNED, null),
-                new Match(SPAIN, ENGLAND, ROUND_OF_16, PLANNED, null),
-                new Match(BELGIUM, ITALY, ROUND_OF_16, PLANNED, null),
-                new Match(PORTUGAL, NETHERLANDS, ROUND_OF_16, PLANNED, null),
-                new Match(URUGUAY, CROATIA, ROUND_OF_16, PLANNED, null),
-                new Match(DENMARK, SWITZERLAND, ROUND_OF_16, PLANNED, null),
-                new Match(COLOMBIA, MEXICO, ROUND_OF_16, PLANNED, null)
+                new Match(FRANCE, BRAZIL, R_1, PLANNED, null),
+                new Match(GERMANY, ARGENTINA, R_2, PLANNED, null),
+                new Match(SPAIN, ENGLAND, R_3, PLANNED, null),
+                new Match(BELGIUM, ITALY, R_4, PLANNED, null),
+                new Match(PORTUGAL, NETHERLANDS, R_5, PLANNED, null),
+                new Match(URUGUAY, CROATIA, R_6, PLANNED, null),
+                new Match(DENMARK, SWITZERLAND, R_7, PLANNED, null),
+                new Match(COLOMBIA, MEXICO, R_8, PLANNED, null)
         );
     }
 
@@ -107,7 +109,7 @@ public class WorldCupTrackerTest {
         // then
         assertThat(tracker.getMatches())
                 .filteredOn(match -> match.teamA() == FRANCE && match.teamB() == BRAZIL)
-                .containsExactly(new Match(FRANCE, BRAZIL, ROUND_OF_16, FINISHED, REGULAR_MATCH_RESULT));
+                .containsExactly(new Match(FRANCE, BRAZIL, R_1, FINISHED, REGULAR_MATCH_RESULT));
     }
 
 
