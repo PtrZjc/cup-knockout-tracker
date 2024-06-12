@@ -255,13 +255,13 @@ public class WorldCupTrackerTest {
         var expectedSummary = """
                 Stage: Round of 16
                 - Brazil vs Germany (upcoming)
-                - Italy vs France (upcoming)
-                - Spain vs Argentina (upcoming)
+                - France vs Italy (upcoming)
+                - Argentina vs Spain (upcoming)
                 - England vs Netherlands (upcoming)
-                - Portugal vs Croatia (upcoming)
-                - USA vs Mexico (upcoming)
+                - Croatia vs Portugal (upcoming)
+                - Mexico vs USA (upcoming)
                 - Belgium vs Japan (upcoming)
-                - Uruguay vs South Korea (upcoming)
+                - South Korea vs Uruguay (upcoming)
                 """;
 
         // when
@@ -292,19 +292,19 @@ public class WorldCupTrackerTest {
         var expectedSummary = """
                 Stage: Quarter-finals
                 - Brazil vs Italy (upcoming)
-                - Spain 2 vs England
+                - England 2 vs Spain
                 - Portugal 2 vs USA 1
-                - Uruguay vs Belgium (upcoming)
-
+                - Belgium vs Uruguay (upcoming)
+                
                 Stage: Round of 16
                 - Brazil 2 vs Germany 0
-                - Italy 1 vs France 0
-                - Spain 1 vs Argentina 1 (Spain wins on penalties 3-2)
+                - France 0 vs Italy 1
+                - Argentina 1 vs Spain 1 (Spain wins on penalties 3-2)
                 - England 3 vs Netherlands 2
-                - Portugal 2 vs Croatia 1
-                - USA 1 vs Mexico 1 (USA wins on penalties 4-3)
+                - Croatia 1 vs Portugal 2
+                - Mexico 1 vs USA 1 (USA wins on penalties 4-3)
                 - Belgium 1 vs Japan 0
-                - Uruguay 3 vs South Korea 2
+                - South Korea 2 vs Uruguay 3
                 """;
 
         // when
@@ -343,29 +343,29 @@ public class WorldCupTrackerTest {
         var expectedSummary = """
                 Stage: Final
                 - Brazil 2 vs Portugal 1
-
+                
                 Stage: Third place match
                 - Spain 2 vs Uruguay 1
-
+                
                 Stage: Semi-finals
                 - Brazil 3 vs Spain 2
                 - Portugal 1 vs Uruguay 0
-
+                
                 Stage: Quarter-finals
                 - Brazil 1 vs Italy 0
-                - Spain 2 vs England 1
+                - England 1 vs Spain 2
                 - Portugal 2 vs USA 1
-                - Uruguay 2 vs Belgium 1
-
+                - Belgium 1 vs Uruguay 2
+                
                 Stage: Round of 16
                 - Brazil 2 vs Germany 0
-                - Italy 1 vs France 0
-                - Spain 1 vs Argentina 1 (Spain wins on penalties 3-2)
+                - France 0 vs Italy 1
+                - Argentina 1 vs Spain 1 (Spain wins on penalties 3-2)
                 - England 3 vs Netherlands 2
-                - Portugal 2 vs Croatia 1
-                - USA 1 vs Mexico 1 (USA wins on penalties 4-3)
+                - Croatia 1 vs Portugal 2
+                - Mexico 1 vs USA 1 (USA wins on penalties 4-3)
                 - Belgium 1 vs Japan 0
-                - Uruguay 3 vs South Korea 2
+                - South Korea 2 vs Uruguay 3
                 """;
 
         // when
