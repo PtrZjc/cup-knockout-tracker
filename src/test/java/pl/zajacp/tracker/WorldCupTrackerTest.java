@@ -22,19 +22,19 @@ import static pl.zajacp.tracker.api.MatchStatus.PLANNED;
 import static pl.zajacp.tracker.api.Team.ARGENTINA;
 import static pl.zajacp.tracker.api.Team.BELGIUM;
 import static pl.zajacp.tracker.api.Team.BRAZIL;
-import static pl.zajacp.tracker.api.Team.COLOMBIA;
 import static pl.zajacp.tracker.api.Team.CROATIA;
-import static pl.zajacp.tracker.api.Team.DENMARK;
 import static pl.zajacp.tracker.api.Team.ENGLAND;
 import static pl.zajacp.tracker.api.Team.FRANCE;
 import static pl.zajacp.tracker.api.Team.GERMANY;
 import static pl.zajacp.tracker.api.Team.ITALY;
+import static pl.zajacp.tracker.api.Team.JAPAN;
 import static pl.zajacp.tracker.api.Team.MEXICO;
 import static pl.zajacp.tracker.api.Team.NETHERLANDS;
 import static pl.zajacp.tracker.api.Team.PORTUGAL;
+import static pl.zajacp.tracker.api.Team.SOUTH_KOREA;
 import static pl.zajacp.tracker.api.Team.SPAIN;
-import static pl.zajacp.tracker.api.Team.SWITZERLAND;
 import static pl.zajacp.tracker.api.Team.URUGUAY;
+import static pl.zajacp.tracker.api.Team.USA;
 import static pl.zajacp.tracker.api.TournamentBracket.Q_1;
 import static pl.zajacp.tracker.api.TournamentBracket.Q_2;
 import static pl.zajacp.tracker.api.TournamentBracket.Q_3;
@@ -57,17 +57,17 @@ public class WorldCupTrackerTest {
     private final WorldCupTracker tracker = new WorldCupTrackerImpl();
 
     private final static List<Team> INITIAL_TEAMS = List.of(
-            FRANCE, BRAZIL,
-            GERMANY, ARGENTINA,
-            SPAIN, ENGLAND,
-            BELGIUM, ITALY,
-            PORTUGAL, NETHERLANDS,
-            URUGUAY, CROATIA,
-            DENMARK, SWITZERLAND,
-            COLOMBIA, MEXICO
+        BRAZIL, GERMANY,
+        ITALY, FRANCE,
+        SPAIN, ARGENTINA,
+        ENGLAND, NETHERLANDS,
+        PORTUGAL, CROATIA,
+        USA, MEXICO,
+        BELGIUM, JAPAN,
+        URUGUAY, SOUTH_KOREA
     );
 
-    private final static MatchResult REGULAR_MATCH_RESULT = new MatchResult(3, 2);
+    private final static MatchResult TEAM_A_WINNING_RESULT = new MatchResult(3, 2);
 
     @Test
     public void shouldInitializeWithSixteenTeams() {
@@ -76,14 +76,14 @@ public class WorldCupTrackerTest {
 
         // then
         assertThat(result).containsExactly(
-                new Match(FRANCE, BRAZIL, R_1, PLANNED, null),
-                new Match(GERMANY, ARGENTINA, R_2, PLANNED, null),
-                new Match(SPAIN, ENGLAND, R_3, PLANNED, null),
-                new Match(BELGIUM, ITALY, R_4, PLANNED, null),
-                new Match(PORTUGAL, NETHERLANDS, R_5, PLANNED, null),
-                new Match(URUGUAY, CROATIA, R_6, PLANNED, null),
-                new Match(DENMARK, SWITZERLAND, R_7, PLANNED, null),
-                new Match(COLOMBIA, MEXICO, R_8, PLANNED, null)
+                new Match(BRAZIL, GERMANY, R_1, PLANNED, null),
+                new Match(ITALY, FRANCE, R_2, PLANNED, null),
+                new Match(SPAIN, ARGENTINA, R_3, PLANNED, null),
+                new Match(ENGLAND, NETHERLANDS, R_4, PLANNED, null),
+                new Match(PORTUGAL, CROATIA, R_5, PLANNED, null),
+                new Match(USA, MEXICO, R_6, PLANNED, null),
+                new Match(BELGIUM, JAPAN, R_7, PLANNED, null),
+                new Match(URUGUAY, SOUTH_KOREA, R_8, PLANNED, null)
         );
     }
 
@@ -100,7 +100,7 @@ public class WorldCupTrackerTest {
         // given
         var initialTeamWithDuplicatedFrance = Stream.concat(
                 INITIAL_TEAMS.subList(0, 15).stream(),
-                Stream.of(FRANCE)
+                Stream.of(BRAZIL)
         ).toList();
 
         // when then
@@ -115,12 +115,12 @@ public class WorldCupTrackerTest {
         tracker.startWorldCup(INITIAL_TEAMS);
 
         // when
-        tracker.recordMatchResult(FRANCE, BRAZIL, REGULAR_MATCH_RESULT);
+        tracker.recordMatchResult(BRAZIL, GERMANY, TEAM_A_WINNING_RESULT);
 
         // then
         assertThat(tracker.getMatches())
-                .filteredOn(match -> match.teamA() == FRANCE && match.teamB() == BRAZIL)
-                .containsExactly(new Match(FRANCE, BRAZIL, R_1, FINISHED, REGULAR_MATCH_RESULT));
+                .filteredOn(match -> match.teamA() == BRAZIL && match.teamB() == GERMANY)
+                .containsExactly(new Match(BRAZIL, GERMANY, R_1, FINISHED, TEAM_A_WINNING_RESULT));
     }
 
 
@@ -130,9 +130,9 @@ public class WorldCupTrackerTest {
         tracker.startWorldCup(INITIAL_TEAMS);
 
         // when then
-        assertThatThrownBy(() -> tracker.recordMatchResult(BRAZIL, FRANCE, REGULAR_MATCH_RESULT))
+        assertThatThrownBy(() -> tracker.recordMatchResult(GERMANY, BRAZIL, TEAM_A_WINNING_RESULT))
                 .isInstanceOf(InvalidTeamOrderException.class)
-                .hasMessageContaining("The match with provided teams exists, but they are in the wrong order: FRANCE is A and BRAZIL is B.");
+                .hasMessageContaining("The match with provided teams exists, but they are in the wrong order: BRAZIL is A and GERMANY is B.");
     }
 
     @Test
@@ -141,9 +141,9 @@ public class WorldCupTrackerTest {
         tracker.startWorldCup(INITIAL_TEAMS);
 
         // when then
-        assertThatThrownBy(() -> tracker.recordMatchResult(FRANCE, ARGENTINA, REGULAR_MATCH_RESULT))
+        assertThatThrownBy(() -> tracker.recordMatchResult(BRAZIL, ARGENTINA, TEAM_A_WINNING_RESULT))
                 .isInstanceOf(MatchNotFoundException.class)
-                .hasMessageContaining("No match found between FRANCE and ARGENTINA");
+                .hasMessageContaining("No match found between BRAZIL and ARGENTINA");
     }
 
     @Disabled
@@ -151,12 +151,12 @@ public class WorldCupTrackerTest {
     public void shouldThrowMatchAlreadyCompletedExceptionIfUpdatingFinishedMatch() {
         // given
         tracker.startWorldCup(INITIAL_TEAMS);
-        tracker.recordMatchResult(FRANCE, BRAZIL, REGULAR_MATCH_RESULT);
+        tracker.recordMatchResult(BRAZIL, GERMANY, TEAM_A_WINNING_RESULT);
 
         // when then
-        assertThatThrownBy(() -> tracker.recordMatchResult(FRANCE, BRAZIL, REGULAR_MATCH_RESULT))
+        assertThatThrownBy(() -> tracker.recordMatchResult(BRAZIL, GERMANY, TEAM_A_WINNING_RESULT))
                 .isInstanceOf(MatchAlreadyCompletedException.class)
-                .hasMessageContaining("The match between FRANCE and BRAZIL has already been completed");
+                .hasMessageContaining("The match between BRAZIL and GERMANY has already been completed");
     }
 
     @Disabled
@@ -170,38 +170,6 @@ public class WorldCupTrackerTest {
     @Disabled
     @Test
     public void shouldUpdateSummaryAfterRecordingResults() {
-        // given
-        // when
-        // then
-    }
-
-    @Disabled
-    @Test
-    public void shouldHandleAllMatchesCompletedWithoutError() {
-        // given
-        // when
-        // then
-    }
-
-    @Disabled
-    @Test
-    public void shouldThrowInvalidScoreExceptionForOutOfRangeScores() {
-        // given
-        // when
-        // then
-    }
-
-    @Disabled
-    @Test
-    public void shouldReturnEmptySetWhenNoMatchesAreInitialized() {
-        // given
-        // when
-        // then
-    }
-
-    @Disabled
-    @Test
-    public void shouldReturnMatchesInChronologicalOrder() {
         // given
         // when
         // then
@@ -227,7 +195,7 @@ public class WorldCupTrackerTest {
     public void shouldCreateQuarterFinalMatchesAfterLastRoundOf16Match() {
         // given
         tracker.startWorldCup(INITIAL_TEAMS)
-                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         // when
         var initalizedQuarterFinalMatches = tracker.getMatches();
@@ -240,10 +208,10 @@ public class WorldCupTrackerTest {
         assertThat(initalizedQuarterFinalMatches)
                 .filteredOn(match -> match.bracketPosition().getStage() == QUARTER_FINALS)
                 .containsExactlyInAnyOrder(
-                        new Match(FRANCE, GERMANY, Q_1, PLANNED, null),
-                        new Match(SPAIN, BELGIUM, Q_2, PLANNED, null),
-                        new Match(PORTUGAL, URUGUAY, Q_3, PLANNED, null),
-                        new Match(DENMARK, COLOMBIA, Q_4, PLANNED, null)
+                        new Match(BRAZIL, ITALY, Q_1, PLANNED, null),
+                        new Match(SPAIN, ENGLAND, Q_2, PLANNED, null),
+                        new Match(PORTUGAL, USA, Q_3, PLANNED, null),
+                        new Match(BELGIUM, URUGUAY, Q_4, PLANNED, null)
                 );
     }
 
@@ -251,12 +219,12 @@ public class WorldCupTrackerTest {
     public void shouldCreateSemiFinalMatchesAfterLastQuarterFinalMatch() {
         // given
         tracker.startWorldCup(INITIAL_TEAMS)
-                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         tracker.getMatches().stream()
-                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
-        Set<Team> expectedTeamsInSemiFinals = Set.of(FRANCE, SPAIN, PORTUGAL, DENMARK);
+        Set<Team> expectedTeamsInSemiFinals = Set.of(BRAZIL, SPAIN, PORTUGAL, BELGIUM);
 
         // when
         var initalizedSemiFinalMatches = tracker.getMatches();
@@ -280,17 +248,17 @@ public class WorldCupTrackerTest {
     public void shouldCreateFinalMatchAfterLastSemiFinalMatch() {
         // given
         tracker.startWorldCup(INITIAL_TEAMS)
-                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         tracker.getMatches().stream()
                 .filter(m -> m.status() == PLANNED)
-                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         tracker.getMatches().stream()
                 .filter(m -> m.status() == PLANNED)
-                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), REGULAR_MATCH_RESULT));
+                .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
-        Set<Team> expectedTeamsInFinals = Set.of(FRANCE, SPAIN, PORTUGAL, DENMARK);
+        Set<Team> expectedTeamsInFinals = Set.of(BRAZIL, SPAIN, PORTUGAL, BELGIUM);
 
         // when
         var initalizedFinalMatches = tracker.getMatches();
