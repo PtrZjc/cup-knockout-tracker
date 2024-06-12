@@ -57,17 +57,17 @@ public class WorldCupTrackerTest {
     private final WorldCupTracker tracker = new WorldCupTrackerImpl();
 
     private final static List<Team> INITIAL_TEAMS = List.of(
-        BRAZIL, GERMANY,
-        ITALY, FRANCE,
-        SPAIN, ARGENTINA,
-        ENGLAND, NETHERLANDS,
-        PORTUGAL, CROATIA,
-        USA, MEXICO,
-        BELGIUM, JAPAN,
-        URUGUAY, SOUTH_KOREA
+            BRAZIL, GERMANY,
+            ITALY, FRANCE,
+            SPAIN, ARGENTINA,
+            ENGLAND, NETHERLANDS,
+            PORTUGAL, CROATIA,
+            USA, MEXICO,
+            BELGIUM, JAPAN,
+            URUGUAY, SOUTH_KOREA
     );
 
-    private final static MatchResult TEAM_A_WINNING_RESULT = new MatchResult(3, 2);
+    private final static MatchResult TEAM_A_WINNING_RESULT = MatchResult.of(3, 2);
 
     @Test
     public void shouldInitializeWithSixteenTeams() {
@@ -159,38 +159,6 @@ public class WorldCupTrackerTest {
                 .hasMessageContaining("The match between BRAZIL and GERMANY has already been completed");
     }
 
-    @Disabled
-    @Test
-    public void shouldProvideSummaryOfPlannedMatchesPostInitialization() {
-        // given
-        // when
-        // then
-    }
-
-    @Disabled
-    @Test
-    public void shouldUpdateSummaryAfterRecordingResults() {
-        // given
-        // when
-        // then
-    }
-
-    @Disabled
-    @Test
-    public void shouldReturnAllPlannedMatchesBeforeAnyAreCompleted() {
-        // given
-        // when
-        // then
-    }
-
-    @Disabled
-    @Test
-    public void shouldReturnCorrectMixOfCompletedAndPlannedMatches() {
-        // given
-        // when
-        // then
-    }
-
     @Test
     public void shouldCreateQuarterFinalMatchesAfterLastRoundOf16Match() {
         // given
@@ -221,7 +189,7 @@ public class WorldCupTrackerTest {
         tracker.startWorldCup(INITIAL_TEAMS)
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
-        tracker.getMatches().stream()
+        tracker.getMatches()
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         Set<Team> expectedTeamsInSemiFinals = Set.of(BRAZIL, SPAIN, PORTUGAL, BELGIUM);
@@ -277,5 +245,133 @@ public class WorldCupTrackerTest {
                             assertThat(expectedTeamsInFinals).contains(match.teamB());
                         }
                 );
+    }
+
+    @Test
+    public void shouldProvideSummaryOfPlannedMatchesPostInitialization() {
+        // given
+        tracker.startWorldCup(INITIAL_TEAMS);
+
+        var expectedSummary = """
+                Stage: Round of 16
+                - Brazil vs Germany (upcoming)
+                - Italy vs France (upcoming)
+                - Spain vs Argentina (upcoming)
+                - England vs Netherlands (upcoming)
+                - Portugal vs Croatia (upcoming)
+                - USA vs Mexico (upcoming)
+                - Belgium vs Japan (upcoming)
+                - Uruguay vs South Korea (upcoming)
+                """;
+
+        // when
+        var summary = tracker.getWorldCupSummary();
+
+        // then
+        assertThat(summary).isEqualTo(expectedSummary);
+    }
+
+    @Test
+    public void shouldUpdateSummaryOfOngoingQuarterFinal() {
+        // given
+        tracker.startWorldCup(INITIAL_TEAMS);
+
+        tracker.recordMatchResult(BRAZIL, GERMANY, MatchResult.of(2, 0));
+        tracker.recordMatchResult(ITALY, FRANCE, MatchResult.of(1, 0));
+        tracker.recordMatchResult(SPAIN, ARGENTINA, MatchResult.of(1, 1, 3, 2));
+        tracker.recordMatchResult(ENGLAND, NETHERLANDS, MatchResult.of(3, 2));
+        tracker.recordMatchResult(PORTUGAL, CROATIA, MatchResult.of(2, 1));
+        tracker.recordMatchResult(USA, MEXICO, MatchResult.of(1, 1, 4, 3));
+        tracker.recordMatchResult(BELGIUM, JAPAN, MatchResult.of(1, 0));
+        tracker.recordMatchResult(URUGUAY, SOUTH_KOREA, MatchResult.of(3, 2));
+
+        tracker.recordMatchResult(SPAIN, ENGLAND, MatchResult.of(2, 1));
+        tracker.recordMatchResult(PORTUGAL, USA, MatchResult.of(2, 1));
+
+
+        var expectedSummary = """
+                Stage: Quarter-finals
+                - Brazil vs Italy (upcoming)
+                - Spain 2 vs England
+                - Portugal 2 vs USA 1
+                - Uruguay vs Belgium (upcoming)
+
+                Stage: Round of 16
+                - Brazil 2 vs Germany 0
+                - Italy 1 vs France 0
+                - Spain 1 vs Argentina 1 (Spain wins on penalties 3-2)
+                - England 3 vs Netherlands 2
+                - Portugal 2 vs Croatia 1
+                - USA 1 vs Mexico 1 (USA wins on penalties 4-3)
+                - Belgium 1 vs Japan 0
+                - Uruguay 3 vs South Korea 2
+                """;
+
+        // when
+        var summary = tracker.getWorldCupSummary();
+
+        // then
+        assertThat(summary).isEqualTo(expectedSummary);
+    }
+
+
+    @Test
+    public void shouldUpdateSummaryOfFinishedWorldCup() {
+        // given
+        tracker.startWorldCup(INITIAL_TEAMS);
+
+        tracker.recordMatchResult(BRAZIL, GERMANY, MatchResult.of(2, 0));
+        tracker.recordMatchResult(ITALY, FRANCE, MatchResult.of(1, 0));
+        tracker.recordMatchResult(SPAIN, ARGENTINA, MatchResult.of(1, 1, 3, 2));
+        tracker.recordMatchResult(ENGLAND, NETHERLANDS, MatchResult.of(3, 2));
+        tracker.recordMatchResult(PORTUGAL, CROATIA, MatchResult.of(2, 1));
+        tracker.recordMatchResult(BELGIUM, JAPAN, MatchResult.of(1, 0));
+        tracker.recordMatchResult(URUGUAY, SOUTH_KOREA, MatchResult.of(3, 2));
+        tracker.recordMatchResult(USA, MEXICO, MatchResult.of(1, 1, 4, 3));
+
+        tracker.recordMatchResult(BRAZIL, ITALY, MatchResult.of(1, 0));
+        tracker.recordMatchResult(SPAIN, ENGLAND, MatchResult.of(2, 1));
+        tracker.recordMatchResult(PORTUGAL, USA, MatchResult.of(2, 1));
+        tracker.recordMatchResult(URUGUAY, BELGIUM, MatchResult.of(2, 1));
+
+        tracker.recordMatchResult(BRAZIL, SPAIN, MatchResult.of(3, 2));
+        tracker.recordMatchResult(PORTUGAL, URUGUAY, MatchResult.of(1, 0));
+
+        tracker.recordMatchResult(BRAZIL, PORTUGAL, MatchResult.of(2, 1));
+        tracker.recordMatchResult(SPAIN, URUGUAY, MatchResult.of(2, 1));
+
+        var expectedSummary = """
+                Stage: Final
+                - Brazil 2 vs Portugal 1
+
+                Stage: Third place match
+                - Spain 2 vs Uruguay 1
+
+                Stage: Semi-finals
+                - Brazil 3 vs Spain 2
+                - Portugal 1 vs Uruguay 0
+
+                Stage: Quarter-finals
+                - Brazil 1 vs Italy 0
+                - Spain 2 vs England 1
+                - Portugal 2 vs USA 1
+                - Uruguay 2 vs Belgium 1
+
+                Stage: Round of 16
+                - Brazil 2 vs Germany 0
+                - Italy 1 vs France 0
+                - Spain 1 vs Argentina 1 (Spain wins on penalties 3-2)
+                - England 3 vs Netherlands 2
+                - Portugal 2 vs Croatia 1
+                - USA 1 vs Mexico 1 (USA wins on penalties 4-3)
+                - Belgium 1 vs Japan 0
+                - Uruguay 3 vs South Korea 2
+                """;
+
+        // when
+        var summary = tracker.getWorldCupSummary();
+
+        // then
+        assertThat(summary).isEqualTo(expectedSummary);
     }
 }
