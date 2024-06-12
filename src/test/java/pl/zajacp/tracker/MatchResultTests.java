@@ -18,7 +18,7 @@ public class MatchResultTests {
         int scoreTeamB = 1;
 
         // when
-        MatchResult result = new MatchResult(scoreTeamA, scoreTeamB);
+        MatchResult result = MatchResult.of(scoreTeamA, scoreTeamB);
 
         // then
         assertThat(result.scoreTeamA()).isEqualTo(scoreTeamA);
@@ -37,7 +37,7 @@ public class MatchResultTests {
         int penaltyScoreTeamB = 3;
 
         // when
-        MatchResult result = new MatchResult(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB);
+        MatchResult result = MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB);
 
         // then
         assertThat(result.scoreTeamA()).isEqualTo(scoreTeamA);
@@ -54,7 +54,7 @@ public class MatchResultTests {
         int scoreTeamB = 1;
 
         // when / then
-        assertThatThrownBy(() -> new MatchResult(scoreTeamA, scoreTeamB))
+        assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB))
                 .isInstanceOf(InvalidScoreException.class)
                 .hasMessageContaining("Invalid score provided");
     }
@@ -68,7 +68,7 @@ public class MatchResultTests {
         int penaltyScoreTeamB = 3;
 
         // when / then
-        assertThatThrownBy(() -> new MatchResult(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
+        assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
                 .isInstanceOf(UnnecessaryPenaltyShootoutException.class)
                 .hasMessageContaining("Penalty shootout result provided for a match that was not a draw");
     }
@@ -82,7 +82,7 @@ public class MatchResultTests {
         int penaltyScoreTeamB = 3;
 
         // when / then
-        assertThatThrownBy(() -> new MatchResult(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
+        assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
                 .isInstanceOf(InvalidPenaltyWinnerException.class)
                 .hasMessageContaining("Penalty scores must be non-negative");
     }
@@ -96,7 +96,7 @@ public class MatchResultTests {
         int penaltyScoreTeamB = 3;
 
         // when / then
-        assertThatThrownBy(() -> new MatchResult(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
+        assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
                 .isInstanceOf(InvalidPenaltyWinnerException.class)
                 .hasMessageContaining("Penalty shootout must have a distinct winner");
     }

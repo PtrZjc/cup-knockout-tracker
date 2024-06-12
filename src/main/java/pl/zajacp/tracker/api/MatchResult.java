@@ -17,12 +17,12 @@ public record MatchResult(
 
     public final static int MAX_SCORE = 100;
 
-    public MatchResult(int scoreTeamA, int scoreTeamB) {
-        this(scoreTeamA, scoreTeamB, Optional.empty(), Optional.empty(), LocalDateTime.now());
+    public static MatchResult of(int scoreTeamA, int scoreTeamB) {
+        return new MatchResult(scoreTeamA, scoreTeamB, Optional.empty(), Optional.empty(), LocalDateTime.now());
     }
 
-    public MatchResult(int scoreTeamA, int scoreTeamB, int penaltyScoreTeamA, int penaltyScoreTeamB) {
-        this(scoreTeamA, scoreTeamB, Optional.of(penaltyScoreTeamA), Optional.of(penaltyScoreTeamB), LocalDateTime.now());
+    public static MatchResult of(int scoreTeamA, int scoreTeamB, int penaltyScoreTeamA, int penaltyScoreTeamB) {
+        return new MatchResult(scoreTeamA, scoreTeamB, Optional.of(penaltyScoreTeamA), Optional.of(penaltyScoreTeamB), LocalDateTime.now());
     }
 
     public MatchResult {

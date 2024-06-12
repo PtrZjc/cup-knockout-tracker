@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import pl.zajacp.tracker.api.Match;
 import pl.zajacp.tracker.api.MatchResult;
 import pl.zajacp.tracker.api.exception.IllegalMatchException;
-import pl.zajacp.tracker.api.exception.InvalidPenaltyWinnerException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,7 +28,7 @@ public class MatchTest {
     public void shouldFinishMatchWithResult() {
         // given
         Match match = Match.of(FRANCE, BRAZIL, R_1);
-        MatchResult matchResult = new MatchResult(3, 2);
+        MatchResult matchResult = MatchResult.of(3, 2);
 
         // when
         var finishedMatch = match.finishWithResult(matchResult);
@@ -62,7 +61,7 @@ public class MatchTest {
     public void shouldGetWinnerForRegularMatch() {
         // given
         Match match = Match.of(FRANCE, BRAZIL, R_1);
-        MatchResult matchResult = new MatchResult(3, 2);
+        MatchResult matchResult = MatchResult.of(3, 2);
 
         // when
         match = match.finishWithResult(matchResult);
@@ -75,7 +74,7 @@ public class MatchTest {
     public void shouldGetWinnerForPenaltyMatch() {
         // given
         Match match = Match.of(FRANCE, BRAZIL, R_1);
-        MatchResult matchResult = new MatchResult(2, 2, 4, 3);
+        MatchResult matchResult = MatchResult.of(2, 2, 4, 3);
 
         // when
         match = match.finishWithResult(matchResult);
