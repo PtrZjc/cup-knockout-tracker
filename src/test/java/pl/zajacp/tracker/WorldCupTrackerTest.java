@@ -7,7 +7,6 @@ import pl.zajacp.tracker.api.MatchResult;
 import pl.zajacp.tracker.api.Team;
 import pl.zajacp.tracker.api.exception.DuplicateTeamsException;
 import pl.zajacp.tracker.api.exception.InvalidTeamCountException;
-import pl.zajacp.tracker.api.exception.InvalidTeamOrderException;
 import pl.zajacp.tracker.api.exception.MatchAlreadyCompletedException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
@@ -249,8 +248,7 @@ public class WorldCupTrackerTest {
                 - Croatia vs Portugal (upcoming)
                 - Mexico vs USA (upcoming)
                 - Belgium vs Japan (upcoming)
-                - South Korea vs Uruguay (upcoming)
-                """;
+                - South Korea vs Uruguay (upcoming)""";
 
         // when
         var summary = tracker.getWorldCupSummary();
@@ -279,7 +277,7 @@ public class WorldCupTrackerTest {
         var expectedSummary = """
                 Stage: Quarter-finals
                 - Brazil vs Italy (upcoming)
-                - England 2 vs Spain
+                - England 1 vs Spain 2
                 - Portugal 2 vs USA 1
                 - Belgium vs Uruguay (upcoming)
 
@@ -291,8 +289,7 @@ public class WorldCupTrackerTest {
                 - Croatia 1 vs Portugal 2
                 - Mexico 1 vs USA 1 (USA wins on penalties 4-3)
                 - Belgium 1 vs Japan 0
-                - South Korea 2 vs Uruguay 3
-                """;
+                - South Korea 2 vs Uruguay 3""";
 
         // when
         var summary = tracker.getWorldCupSummary();
@@ -330,9 +327,7 @@ public class WorldCupTrackerTest {
         var expectedSummary = """
                 Stage: Final
                 - Brazil 2 vs Portugal 1
-
-                Stage: Third place match
-                - Spain 2 vs Uruguay 1
+                - Spain 2 vs Uruguay 1, 3rd place match
 
                 Stage: Semi-finals
                 - Brazil 3 vs Spain 2
@@ -352,8 +347,7 @@ public class WorldCupTrackerTest {
                 - Croatia 1 vs Portugal 2
                 - Mexico 1 vs USA 1 (USA wins on penalties 4-3)
                 - Belgium 1 vs Japan 0
-                - South Korea 2 vs Uruguay 3
-                """;
+                - South Korea 2 vs Uruguay 3""";
 
         // when
         var summary = tracker.getWorldCupSummary();
