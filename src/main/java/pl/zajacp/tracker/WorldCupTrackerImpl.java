@@ -85,7 +85,38 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
 
     @Override
     public String getWorldCupSummary() {
-        return "";
+        var s = matches.values().stream()
+                .sorted(MATCH_COMPARATOR)
+                .map(this::printMatchSummaryLine)
+                .collect(Collectors.joining("\n"));
+
+        return s;
+    }
+
+    private String printMatchSummaryLine(Match match) {
+        boolean matchFinished = match.status() == MatchStatus.FINISHED;
+        match = orderTeamsAlphabetically(match);
+
+        return "- %s%s vs %s%s%s".formatted(
+                match.teamA().getPrintName(),
+                matchFinished ? " " + match.finishedMatchResult().scoreTeamA() : "",
+                match.teamB().getPrintName(),
+                matchFinished ? " " + match.finishedMatchResult().scoreTeamB() : "",
+                getPossiblePenaltyInfo(match)
+        );
+    }
+
+    private String getPossiblePenaltyInfo(Match match) {
+        if (match.finishedMatchResult().penaltyScoreTeamA().isEmpty()) {
+            return "";
+        }
+        int penaltyScoreTeamA = match.finishedMatchResult().penaltyScoreTeamA().get();
+        int penaltyScoreTeamB = match.finishedMatchResult().penaltyScoreTeamB().get();
+        return "(%s wins on penalties %s-%s)".formatted(
+                match.getWinner().getPrintName(),
+                Math.max(penaltyScoreTeamA, penaltyScoreTeamB),
+                Math.min(penaltyScoreTeamA, penaltyScoreTeamB)
+        );
     }
 
     private void recalculateTournamentStage() {
@@ -127,6 +158,19 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
         return Match.of(thirdPlaceTeams.get(0), thirdPlaceTeams.get(1), F_THIRD_PLACE);
     }
 
+    private Match orderTeamsAlphabetically(Match match) {
+        return match.teamA().compareTo(match.teamB()) > 0
+                ? new Match(match.teamB(), match.teamA(), match.bracketPosition(), match.status(), invert(match.finishedMatchResult()))
+                : match;
+    }
+
+    private MatchResult invert(MatchResult result) {
+        return new MatchResult(result.scoreTeamB(),
+                result.scoreTeamA(),
+                result.penaltyScoreTeamB(),
+                result.penaltyScoreTeamA(),
+                result.matchDateTime());
+    }
 
     private record MatchKey(Team teamA, Team teamB) {
         static MatchKey of(Match match) {
@@ -136,14 +180,6 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
         MatchKey inverted() {
             return new MatchKey(teamB(), teamA());
         }
-    }
-
-    private MatchResult invert(MatchResult result) {
-        return new MatchResult(result.scoreTeamB(),
-                result.scoreTeamA(),
-                result.penaltyScoreTeamB(),
-                result.penaltyScoreTeamA(),
-                result.matchDateTime());
     }
 
     private record BracketWinner(Team winningTeam, TournamentBracket currentBracket) {

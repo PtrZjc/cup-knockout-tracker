@@ -20,5 +20,13 @@ public enum Team {
     USA,
     JAPAN,
     SENEGAL,
-    SOUTH_KOREA
+    SOUTH_KOREA;
+
+    public String getPrintName() {
+        return switch (this) {
+            case USA -> "USA";
+            case SOUTH_KOREA -> "South Korea";
+            default -> name().charAt(0) + name().substring(1).toLowerCase();
+        };
+    }
 }
