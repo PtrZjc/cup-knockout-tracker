@@ -8,6 +8,7 @@ import pl.zajacp.tracker.api.TournamentBracket;
 import pl.zajacp.tracker.api.TournamentStage;
 import pl.zajacp.tracker.api.exception.DuplicateTeamsException;
 import pl.zajacp.tracker.api.exception.InvalidTeamCountException;
+import pl.zajacp.tracker.api.exception.MatchAlreadyCompletedException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
 import java.util.Arrays;
@@ -73,6 +74,10 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
         if (match.isEmpty()) {
             throw new MatchNotFoundException(teamA, teamB);
         }
+        if(match.get().status() == MatchStatus.FINISHED){
+            throw new MatchAlreadyCompletedException(teamA, teamB);
+        }
+
         var finishedMatch = matches.put(matchKey, match.get().finishWithResult(matchResult));
         recalculateTournamentStage();
         return finishedMatch;
@@ -97,77 +102,6 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
                 getFirstHeader(sortedMatches),
                 summary,
                 printMatchSummaryLine(sortedMatches.getLast()));
-    }
-
-    private String getFirstHeader(List<Match> sortedMatches) {
-        String header = switch (sortedMatches.getFirst().bracketPosition().getStage()) {
-            case FINAL -> "Final";
-            case SEMI_FINALS -> "Semi-finals";
-            case QUARTER_FINALS -> "Quarter-finals";
-            case ROUND_OF_16 -> "Round of 16";
-        };
-        return "Stage: " + header;
-    }
-
-    private String getSummaryLineWithPossibleHeader(Match currentMatch, Match nextMatch) {
-        String summaryLine = printMatchSummaryLine(currentMatch);
-        boolean shouldAddHeader = currentMatch.bracketPosition().getStage()
-                != nextMatch.bracketPosition().getStage();
-
-        if (!shouldAddHeader) {
-            return summaryLine;
-        }
-        String header = switch (currentMatch.bracketPosition().getStage()) {
-            case FINAL -> "Semi-finals";
-            case SEMI_FINALS -> "Quarter-finals";
-            case QUARTER_FINALS -> "Round of 16";
-            default -> throw new RuntimeException("Unexpected");
-        };
-        return "%s%n%n%s".formatted(summaryLine, "Stage: " + header);
-    }
-
-    private String printMatchSummaryLine(Match match) {
-        boolean matchFinished = match.status() == MatchStatus.FINISHED;
-        match = orderTeamsAlphabetically(match);
-
-        return "- %s%s vs %s%s%s%s%s".formatted(
-                match.teamA().getPrintName(),
-                matchFinished ? " " + match.finishedMatchResult().scoreTeamA() : "",
-                match.teamB().getPrintName(),
-                matchFinished ? " " + match.finishedMatchResult().scoreTeamB() : "",
-                printPossibleThirdPlaceMatch(match),
-                printPossibleUpcoming(match),
-                printPossiblePenaltyInfo(match)
-        );
-    }
-
-    private Match orderTeamsAlphabetically(Match match) {
-        return match.teamA().name().compareTo(match.teamB().name()) > 0
-                ? new Match(match.teamB(), match.teamA(), match.bracketPosition(), match.status(), invert(match.finishedMatchResult()))
-                : match;
-    }
-
-    private Object printPossibleUpcoming(Match match) {
-        return match.status() == MatchStatus.PLANNED ? " (upcoming)" : "";
-    }
-
-    private String printPossibleThirdPlaceMatch(Match match) {
-        return match.bracketPosition() == F_THIRD_PLACE ? ", 3rd place match" : "";
-    }
-
-    private String printPossiblePenaltyInfo(Match match) {
-        boolean shouldPrint = match.finishedMatchResult() != null &&
-                match.finishedMatchResult().penaltyScoreTeamA().isPresent();
-
-        if (!shouldPrint) return "";
-
-        int penaltyScoreTeamA = match.finishedMatchResult().penaltyScoreTeamA().get();
-        int penaltyScoreTeamB = match.finishedMatchResult().penaltyScoreTeamB().get();
-        return " (%s wins on penalties %s-%s)".formatted(
-                match.getWinner().getPrintName(),
-                Math.max(penaltyScoreTeamA, penaltyScoreTeamB),
-                Math.min(penaltyScoreTeamA, penaltyScoreTeamB)
-        );
     }
 
     private void recalculateTournamentStage() {
@@ -200,6 +134,69 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
             matches.put(MatchKey.of(thirdPlaceMatch), thirdPlaceMatch);
         }
         stageWinners.forEach(m -> matches.put(MatchKey.of(m), m));
+    }
+
+    private String getSummaryLineWithPossibleHeader(Match currentMatch, Match nextMatch) {
+        String summaryLine = printMatchSummaryLine(currentMatch);
+        boolean shouldAddHeader = currentMatch.bracketPosition().getStage()
+                != nextMatch.bracketPosition().getStage();
+
+        if (!shouldAddHeader) {
+            return summaryLine;
+        }
+        String header = switch (currentMatch.bracketPosition().getStage()) {
+            case FINAL -> "Semi-finals";
+            case SEMI_FINALS -> "Quarter-finals";
+            case QUARTER_FINALS -> "Round of 16";
+            default -> throw new RuntimeException("Unexpected");
+        };
+        return "%s%n%n%s".formatted(summaryLine, "Stage: " + header);
+    }
+
+    private String getFirstHeader(List<Match> sortedMatches) {
+        String header = switch (sortedMatches.getFirst().bracketPosition().getStage()) {
+            case FINAL -> "Final";
+            case SEMI_FINALS -> "Semi-finals";
+            case QUARTER_FINALS -> "Quarter-finals";
+            case ROUND_OF_16 -> "Round of 16";
+        };
+        return "Stage: " + header;
+    }
+
+    private String printMatchSummaryLine(Match match) {
+        match = orderTeamsAlphabetically(match);
+        boolean matchFinished = match.status() == MatchStatus.FINISHED;
+
+        return "- %s%s vs %s%s%s%s%s".formatted(
+                match.teamA().getPrintName(),
+                matchFinished ? " " + match.finishedMatchResult().scoreTeamA() : "",
+                match.teamB().getPrintName(),
+                matchFinished ? " " + match.finishedMatchResult().scoreTeamB() : "",
+                match.bracketPosition() == F_THIRD_PLACE ? ", 3rd place match" : "",
+                match.status() == MatchStatus.PLANNED ? " (upcoming)" : "",
+                printPossiblePenaltyInfo(match)
+        );
+    }
+
+    private Match orderTeamsAlphabetically(Match match) {
+        return match.teamA().name().compareTo(match.teamB().name()) > 0
+                ? new Match(match.teamB(), match.teamA(), match.bracketPosition(), match.status(), invert(match.finishedMatchResult()))
+                : match;
+    }
+
+    private String printPossiblePenaltyInfo(Match match) {
+        boolean shouldPrint = match.finishedMatchResult() != null &&
+                match.finishedMatchResult().penaltyScoreTeamA().isPresent();
+
+        if (!shouldPrint) return "";
+
+        int penaltyScoreTeamA = match.finishedMatchResult().penaltyScoreTeamA().get();
+        int penaltyScoreTeamB = match.finishedMatchResult().penaltyScoreTeamB().get();
+        return " (%s wins on penalties %s-%s)".formatted(
+                match.getWinner().getPrintName(),
+                Math.max(penaltyScoreTeamA, penaltyScoreTeamB),
+                Math.min(penaltyScoreTeamA, penaltyScoreTeamB)
+        );
     }
 
     private static Match getThirdPlaceMatch(Map<TournamentStage, List<Match>> matchesByStage) {

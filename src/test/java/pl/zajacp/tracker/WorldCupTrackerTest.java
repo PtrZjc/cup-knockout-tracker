@@ -1,6 +1,5 @@
 package pl.zajacp.tracker;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import pl.zajacp.tracker.api.Match;
 import pl.zajacp.tracker.api.MatchResult;
@@ -133,7 +132,6 @@ public class WorldCupTrackerTest {
                 .hasMessageContaining("No match found between BRAZIL and ARGENTINA");
     }
 
-    @Disabled
     @Test
     public void shouldThrowMatchAlreadyCompletedExceptionIfUpdatingFinishedMatch() {
         // given
@@ -176,7 +174,8 @@ public class WorldCupTrackerTest {
         tracker.startWorldCup(INITIAL_TEAMS)
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
-        tracker.getMatches()
+        tracker.getMatches().stream()
+                .filter(m -> m.status() == PLANNED)
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         Set<Team> expectedTeamsInSemiFinals = Set.of(BRAZIL, SPAIN, PORTUGAL, BELGIUM);

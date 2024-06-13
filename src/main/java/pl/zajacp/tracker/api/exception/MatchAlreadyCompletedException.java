@@ -1,7 +1,9 @@
 package pl.zajacp.tracker.api.exception;
 
+import pl.zajacp.tracker.api.Team;
+
 public class MatchAlreadyCompletedException extends WorldCupTrackerException {
-    public MatchAlreadyCompletedException(String teamA, String teamB) {
+    public MatchAlreadyCompletedException(Team teamA, Team teamB) {
         super("The match between " + teamA + " and " + teamB + " has already been completed.");
     }
 }
