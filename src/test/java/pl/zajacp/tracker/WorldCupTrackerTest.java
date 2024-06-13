@@ -123,18 +123,6 @@ public class WorldCupTrackerTest {
                 .containsExactly(new Match(BRAZIL, GERMANY, R_1, FINISHED, TEAM_A_WINNING_RESULT));
     }
 
-
-    @Test
-    public void shouldThrowWrongTeamOrder() {
-        // given
-        tracker.startWorldCup(INITIAL_TEAMS);
-
-        // when then
-        assertThatThrownBy(() -> tracker.recordMatchResult(GERMANY, BRAZIL, TEAM_A_WINNING_RESULT))
-                .isInstanceOf(InvalidTeamOrderException.class)
-                .hasMessageContaining("The match with provided teams exists, but they are in the wrong order: BRAZIL is A and GERMANY is B.");
-    }
-
     @Test
     public void shouldThrowMatchNotFoundExceptionForNonexistentMatch() {
         // given
@@ -277,17 +265,16 @@ public class WorldCupTrackerTest {
         tracker.startWorldCup(INITIAL_TEAMS);
 
         tracker.recordMatchResult(BRAZIL, GERMANY, MatchResult.of(2, 0));
-        tracker.recordMatchResult(ITALY, FRANCE, MatchResult.of(1, 0));
+        tracker.recordMatchResult(FRANCE, ITALY, MatchResult.of(0, 1));
         tracker.recordMatchResult(SPAIN, ARGENTINA, MatchResult.of(1, 1, 3, 2));
         tracker.recordMatchResult(ENGLAND, NETHERLANDS, MatchResult.of(3, 2));
-        tracker.recordMatchResult(PORTUGAL, CROATIA, MatchResult.of(2, 1));
-        tracker.recordMatchResult(USA, MEXICO, MatchResult.of(1, 1, 4, 3));
+        tracker.recordMatchResult(CROATIA, PORTUGAL, MatchResult.of(1, 2));
+        tracker.recordMatchResult(MEXICO, USA, MatchResult.of(1, 1, 3, 4));
         tracker.recordMatchResult(BELGIUM, JAPAN, MatchResult.of(1, 0));
-        tracker.recordMatchResult(URUGUAY, SOUTH_KOREA, MatchResult.of(3, 2));
+        tracker.recordMatchResult(SOUTH_KOREA, URUGUAY, MatchResult.of(2, 3));
 
-        tracker.recordMatchResult(SPAIN, ENGLAND, MatchResult.of(2, 1));
+        tracker.recordMatchResult(ENGLAND, SPAIN, MatchResult.of(1, 2));
         tracker.recordMatchResult(PORTUGAL, USA, MatchResult.of(2, 1));
-
 
         var expectedSummary = """
                 Stage: Quarter-finals
@@ -295,7 +282,7 @@ public class WorldCupTrackerTest {
                 - England 2 vs Spain
                 - Portugal 2 vs USA 1
                 - Belgium vs Uruguay (upcoming)
-                
+
                 Stage: Round of 16
                 - Brazil 2 vs Germany 0
                 - France 0 vs Italy 1
@@ -321,16 +308,16 @@ public class WorldCupTrackerTest {
         tracker.startWorldCup(INITIAL_TEAMS);
 
         tracker.recordMatchResult(BRAZIL, GERMANY, MatchResult.of(2, 0));
-        tracker.recordMatchResult(ITALY, FRANCE, MatchResult.of(1, 0));
+        tracker.recordMatchResult(FRANCE, ITALY, MatchResult.of(0, 1));
         tracker.recordMatchResult(SPAIN, ARGENTINA, MatchResult.of(1, 1, 3, 2));
         tracker.recordMatchResult(ENGLAND, NETHERLANDS, MatchResult.of(3, 2));
-        tracker.recordMatchResult(PORTUGAL, CROATIA, MatchResult.of(2, 1));
+        tracker.recordMatchResult(CROATIA, PORTUGAL, MatchResult.of(1, 2));
+        tracker.recordMatchResult(MEXICO, USA, MatchResult.of(1, 1, 3, 4));
         tracker.recordMatchResult(BELGIUM, JAPAN, MatchResult.of(1, 0));
-        tracker.recordMatchResult(URUGUAY, SOUTH_KOREA, MatchResult.of(3, 2));
-        tracker.recordMatchResult(USA, MEXICO, MatchResult.of(1, 1, 4, 3));
+        tracker.recordMatchResult(SOUTH_KOREA, URUGUAY, MatchResult.of(2, 3));
 
         tracker.recordMatchResult(BRAZIL, ITALY, MatchResult.of(1, 0));
-        tracker.recordMatchResult(SPAIN, ENGLAND, MatchResult.of(2, 1));
+        tracker.recordMatchResult(ENGLAND, SPAIN, MatchResult.of(1, 2));
         tracker.recordMatchResult(PORTUGAL, USA, MatchResult.of(2, 1));
         tracker.recordMatchResult(URUGUAY, BELGIUM, MatchResult.of(2, 1));
 
@@ -343,20 +330,20 @@ public class WorldCupTrackerTest {
         var expectedSummary = """
                 Stage: Final
                 - Brazil 2 vs Portugal 1
-                
+
                 Stage: Third place match
                 - Spain 2 vs Uruguay 1
-                
+
                 Stage: Semi-finals
                 - Brazil 3 vs Spain 2
                 - Portugal 1 vs Uruguay 0
-                
+
                 Stage: Quarter-finals
                 - Brazil 1 vs Italy 0
                 - England 1 vs Spain 2
                 - Portugal 2 vs USA 1
                 - Belgium 1 vs Uruguay 2
-                
+
                 Stage: Round of 16
                 - Brazil 2 vs Germany 0
                 - France 0 vs Italy 1

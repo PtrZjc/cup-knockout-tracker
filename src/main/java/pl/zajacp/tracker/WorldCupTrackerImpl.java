@@ -8,7 +8,6 @@ import pl.zajacp.tracker.api.TournamentBracket;
 import pl.zajacp.tracker.api.TournamentStage;
 import pl.zajacp.tracker.api.exception.DuplicateTeamsException;
 import pl.zajacp.tracker.api.exception.InvalidTeamCountException;
-import pl.zajacp.tracker.api.exception.InvalidTeamOrderException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
 import java.util.Arrays;
@@ -18,18 +17,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static pl.zajacp.tracker.api.TournamentBracket.F_THIRD_PLACE;
+import static pl.zajacp.tracker.api.TournamentStage.FINAL;
 import static pl.zajacp.tracker.api.TournamentStage.ROUND_OF_16;
 import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
 
 public class WorldCupTrackerImpl implements WorldCupTracker {
 
     private final Map<MatchKey, Match> matches = new LinkedHashMap<>();
+
+    private final static Comparator<Match> MATCH_COMPARATOR =
+            Comparator.comparingInt((Match m) -> m.bracketPosition().getStage().getOrderInCompetition())
+                    .reversed()
+                    .thenComparing(Match::bracketPosition);
 
     @Override
     public List<Match> startWorldCup(List<Team> teams) {
@@ -59,7 +66,8 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
     public Match recordMatchResult(Team teamA, Team teamB, MatchResult matchResult) {
         var matchKey = new MatchKey(teamA, teamB);
         if (matches.containsKey(matchKey.inverted())) {
-            throw new InvalidTeamOrderException(teamA, teamB);
+            matchKey = matchKey.inverted();
+            matchResult = invert(matchResult);
         }
         var match = Optional.ofNullable(matches.get(matchKey));
         if (match.isEmpty()) {
@@ -81,9 +89,10 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
     }
 
     private void recalculateTournamentStage() {
-        boolean anyMatchUnfinished = matches.values().stream()
-                .anyMatch(m -> m.status() == MatchStatus.PLANNED);
-        if (anyMatchUnfinished) {
+        boolean finalOrAnyMatchUnfinished = matches.values().stream()
+                .anyMatch(m -> m.status() == MatchStatus.PLANNED
+                        || m.bracketPosition().getStage() == FINAL);
+        if (finalOrAnyMatchUnfinished) {
             return;
         }
 
@@ -94,7 +103,7 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
                 .filter(e -> e.getValue().stream().allMatch(m -> m.status() == MatchStatus.FINISHED))
                 .map(Map.Entry::getKey)
                 .distinct()
-                .max(Comparator.comparingInt(TournamentStage::getOrderInCompetition))
+                .max(comparingInt(TournamentStage::getOrderInCompetition))
                 .orElseThrow();
 
         List<Match> stageWinners = matchesByStage.get(lastCompletedStage).stream()
@@ -127,6 +136,14 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
         MatchKey inverted() {
             return new MatchKey(teamB(), teamA());
         }
+    }
+
+    private MatchResult invert(MatchResult result) {
+        return new MatchResult(result.scoreTeamB(),
+                result.scoreTeamA(),
+                result.penaltyScoreTeamB(),
+                result.penaltyScoreTeamA(),
+                result.matchDateTime());
     }
 
     private record BracketWinner(Team winningTeam, TournamentBracket currentBracket) {
