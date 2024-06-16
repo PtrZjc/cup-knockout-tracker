@@ -28,7 +28,7 @@ import static pl.zajacp.tracker.api.TournamentStage.FINAL;
 import static pl.zajacp.tracker.api.TournamentStage.ROUND_OF_16;
 import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
 
-public class CupTrackerImpl implements CupTracker {
+public class InMemoryCupTracker implements CupTracker {
 
     private final Map<MatchKey, Match> matches = new LinkedHashMap<>();
 
@@ -87,7 +87,7 @@ public class CupTrackerImpl implements CupTracker {
     }
 
     @Override
-    public String getWorldCupSummary() {
+    public String getCupSummary() {
         var sortedMatches = matches.values().stream()
                 .sorted(MATCH_COMPARATOR)
                 .toList();

@@ -1,17 +1,17 @@
-# World Cup Knockout Stage Tracker
+# The Cup Knockout Stage Tracker
 
 ## Overview
 
-The World Cup Knockout Stage Tracker is a simple library
-designed to manage and oversee the progression of the Football World Cup from the Round of 16 to the Final.
+The Cup Knockout Stage Tracker is a simple library
+designed to manage and oversee the progression of any Football Cup from the Round of 16 to the Final.
 It is tailored to efficiently follow and document the sequence of matches,
 ensuring all results and schedules are captured systematically.
 
 ## Key Features
 
-### 1. Initialize the World Cup
+### 1. Initialize the Cup
 
-- Functionality: Starts the knockout stages by setting up the initial bracket of 16 teams.
+- Functionality: Start the knockout stages by setting up the initial bracket of 16 teams.
 - Details: On initialization, the user inputs the participating teams which are then stored for the entirety of the
   tournament.
 
@@ -23,7 +23,7 @@ ensuring all results and schedules are captured systematically.
     - The losing team
     - The final scores of both teams
 
-### 3. Get a Summary of the World Cup Status
+### 3. Get a Summary of the Cup Status
 
 - Functionality: Provides a dynamic summary of the tournament's current stage.
 - Details: Includes:
@@ -31,12 +31,13 @@ ensuring all results and schedules are captured systematically.
     - Results of completed matches
     - Schedule of upcoming matches
 
-The matches in summary output should be sorted according to the bracket position. I.e. relative position between the teams
-in the bracket should be maintained. The teams itself in match should be sorted alphabetically.
+The matches in summary output should be sorted according to the bracket position.
+I.e., relative position between the teams in the bracket should be maintained.
+The teams itself in match should be sorted alphabetically.
 
 #### Example Summary Outputs
 
-##### 1. Example summary output of the initialized World Cup:
+##### 1. Example summary output of the initialized Cup:
 
 ```
 Stage: Round of 16
@@ -50,7 +51,7 @@ Stage: Round of 16
 - South Korea vs Uruguay (upcoming)
 ```
 
-##### Example summary output of the ongoing World Cup:
+##### Example summary output of the ongoing Cup:
 
 ```
 Stage: Quarter-finals
@@ -70,7 +71,7 @@ Stage: Round of 16
 - South Korea 2 vs Uruguay 3
 ```
 
-##### Example summary output of the finished World Cup:
+##### Example summary output of the finished Cup:
 
 ```
 Stage: Final
@@ -97,13 +98,3 @@ Stage: Round of 16
 - Belgium 1 vs Japan 0
 - South Korea 2 vs Uruguay 3
 ```
-
-## Operational Protocol
-
-All matches within a given stage must be fully completed before progressing to the next phase.
-This protocol ensures clarity and fairness throughout the competition.
-
-## Example Usage
-
-Current system data includes:
-
