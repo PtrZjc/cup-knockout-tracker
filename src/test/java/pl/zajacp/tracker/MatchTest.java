@@ -9,8 +9,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static pl.zajacp.tracker.api.MatchStatus.FINISHED;
-import static pl.zajacp.tracker.api.MatchStatus.PLANNED;
 import static pl.zajacp.tracker.api.Team.BRAZIL;
 import static pl.zajacp.tracker.api.Team.FRANCE;
 import static pl.zajacp.tracker.api.TournamentBracket.R_1;
@@ -23,7 +21,7 @@ public class MatchTest {
         Match match = Match.of(FRANCE, BRAZIL, R_1);
 
         // then
-        assertThat(match).isEqualTo(new Match(FRANCE, BRAZIL, R_1, PLANNED, Optional.empty()));
+        assertThat(match).isEqualTo(new Match(FRANCE, BRAZIL, R_1, Optional.empty()));
     }
 
     @Test
@@ -37,15 +35,7 @@ public class MatchTest {
 
         // then
         assertThat(finishedMatch).isNotEqualTo(match);
-        assertThat(finishedMatch).isEqualTo(new Match(FRANCE, BRAZIL, R_1, FINISHED, Optional.of(matchResult)));
-    }
-
-    @Test
-    public void shouldThrowIllegalMatchExceptionIfFinishedMatchWithoutResult() {
-        // when / then
-        assertThatThrownBy(() -> new Match(FRANCE, BRAZIL, R_1, FINISHED, Optional.empty()))
-                .isInstanceOf(IllegalMatchException.class)
-                .hasMessageContaining("Match is finished but no result provided");
+        assertThat(finishedMatch).isEqualTo(new Match(FRANCE, BRAZIL, R_1,Optional.of(matchResult)));
     }
 
     @Test

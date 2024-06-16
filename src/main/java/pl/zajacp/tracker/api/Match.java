@@ -9,23 +9,13 @@ public record Match
         (@NonNull Team teamA,
          @NonNull Team teamB,
          @NonNull TournamentBracket bracketPosition,
-         @NonNull MatchStatus status,
          @NonNull Optional<MatchResult> finishedMatchResult) {
     public static Match of(Team teamA, Team teamB, TournamentBracket bracketPosition) {
-        return new Match(teamA, teamB, bracketPosition, MatchStatus.PLANNED, Optional.empty());
-    }
-
-    public Match {
-        if (status == MatchStatus.FINISHED && finishedMatchResult.isEmpty()) {
-            throw new IllegalMatchException("Match is finished but no result provided");
-        }
-        if (status == MatchStatus.PLANNED && finishedMatchResult.isPresent()) {
-            throw new IllegalMatchException("Match is not finished but the result is provided");
-        }
+        return new Match(teamA, teamB, bracketPosition, Optional.empty());
     }
 
     public Match finishWithResult(MatchResult result) {
-        return new Match(teamA, teamB, bracketPosition, MatchStatus.FINISHED, Optional.of(result));
+        return new Match(teamA, teamB, bracketPosition, Optional.of(result));
     }
 
     public Team getWinner() {
@@ -42,11 +32,15 @@ public record Match
                 : teamB;
     }
 
+    public boolean isFinished() {
+        return finishedMatchResult.isPresent();
+    }
+
     public Team getLoser() {
         return teamA == getWinner() ? teamB : teamA;
     }
 
     public Match inverted() {
-        return new Match(teamB, teamA, bracketPosition, status, finishedMatchResult.map(MatchResult::inverted));
+        return new Match(teamB, teamA, bracketPosition, finishedMatchResult.map(MatchResult::inverted));
     }
 }

@@ -2,7 +2,6 @@ package pl.zajacp.tracker;
 
 import pl.zajacp.tracker.api.Match;
 import pl.zajacp.tracker.api.MatchResult;
-import pl.zajacp.tracker.api.MatchStatus;
 import pl.zajacp.tracker.api.Team;
 import pl.zajacp.tracker.api.TournamentBracket;
 import pl.zajacp.tracker.api.TournamentStage;
@@ -73,7 +72,7 @@ public class CupTrackerImpl implements CupTracker {
         if (match.isEmpty()) {
             throw new MatchNotFoundException(teamA, teamB);
         }
-        if (match.get().status() == MatchStatus.FINISHED) {
+        if (match.get().isFinished()) {
             throw new MatchAlreadyCompletedException(teamA, teamB);
         }
         var updatedMatch = match.get().finishWithResult(matchResult);
@@ -105,8 +104,7 @@ public class CupTrackerImpl implements CupTracker {
 
     private void recalculateTournamentStage() {
         boolean finalOrAnyMatchUnfinished = matches.values().stream()
-                .anyMatch(m -> m.status() == MatchStatus.PLANNED
-                        || m.bracketPosition().getStage() == FINAL);
+                .anyMatch(m -> !m.isFinished() || m.bracketPosition().getStage() == FINAL);
         if (finalOrAnyMatchUnfinished) {
             return;
         }
@@ -115,7 +113,7 @@ public class CupTrackerImpl implements CupTracker {
                 .collect(groupingBy(m -> m.bracketPosition().getStage(), toList()));
 
         TournamentStage lastCompletedStage = matchesByStage.entrySet().stream()
-                .filter(e -> e.getValue().stream().allMatch(m -> m.status() == MatchStatus.FINISHED))
+                .filter(e -> e.getValue().stream().allMatch(Match::isFinished))
                 .map(Map.Entry::getKey)
                 .distinct()
                 .max(comparingInt(TournamentStage::getOrderInCompetition))
@@ -167,11 +165,11 @@ public class CupTrackerImpl implements CupTracker {
 
         return "- %s%s vs %s%s%s%s%s".formatted(
                 match.teamA().getPrintName(),
-                match.finishedMatchResult().isPresent() ? " " + match.finishedMatchResult().get().scoreTeamA() : "",
+                match.isFinished() ? " " + match.finishedMatchResult().get().scoreTeamA() : "",
                 match.teamB().getPrintName(),
-                match.finishedMatchResult().isPresent() ? " " + match.finishedMatchResult().get().scoreTeamB() : "",
+                match.isFinished() ? " " + match.finishedMatchResult().get().scoreTeamB() : "",
                 match.bracketPosition() == F_THIRD_PLACE ? ", 3rd place match" : "",
-                match.status() == MatchStatus.PLANNED ? " (upcoming)" : "",
+                !match.isFinished() ? " (upcoming)" : "",
                 printPossiblePenaltyInfo(match)
         );
     }
@@ -181,7 +179,7 @@ public class CupTrackerImpl implements CupTracker {
     }
 
     private String printPossiblePenaltyInfo(Match match) {
-        boolean shouldPrint = match.finishedMatchResult().isPresent() &&
+        boolean shouldPrint = match.isFinished() &&
                 match.finishedMatchResult().get().penaltyScoreTeamA().isPresent();
 
         if (!shouldPrint) return "";
