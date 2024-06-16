@@ -6,8 +6,7 @@ import pl.zajacp.tracker.api.MatchStatus;
 import pl.zajacp.tracker.api.Team;
 import pl.zajacp.tracker.api.TournamentBracket;
 import pl.zajacp.tracker.api.TournamentStage;
-import pl.zajacp.tracker.api.exception.DuplicateTeamsException;
-import pl.zajacp.tracker.api.exception.InvalidTeamCountException;
+import pl.zajacp.tracker.api.exception.InvalidTeamException;
 import pl.zajacp.tracker.api.exception.MatchAlreadyCompletedException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
@@ -30,7 +29,7 @@ import static pl.zajacp.tracker.api.TournamentStage.FINAL;
 import static pl.zajacp.tracker.api.TournamentStage.ROUND_OF_16;
 import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
 
-public class WorldCupTrackerImpl implements WorldCupTracker {
+public class CupTrackerImpl implements CupTracker {
 
     private final Map<MatchKey, Match> matches = new LinkedHashMap<>();
 
@@ -40,12 +39,12 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
                     .thenComparing(Match::bracketPosition);
 
     @Override
-    public List<Match> startWorldCup(List<Team> teams) {
+    public List<Match> startCup(List<Team> teams) {
         if (teams.size() != 16) {
-            throw new InvalidTeamCountException(teams.size());
+            throw new InvalidTeamException("Team count must be 16, but was " + teams.size());
         }
         if (Set.copyOf(teams).size() != 16) {
-            throw new DuplicateTeamsException();
+            throw new InvalidTeamException("Duplicate teams found in the list. Each team must be unique.");
         }
 
         var initialBracketPositions = Arrays.stream(TournamentBracket.values())
@@ -74,7 +73,7 @@ public class WorldCupTrackerImpl implements WorldCupTracker {
         if (match.isEmpty()) {
             throw new MatchNotFoundException(teamA, teamB);
         }
-        if(match.get().status() == MatchStatus.FINISHED){
+        if (match.get().status() == MatchStatus.FINISHED) {
             throw new MatchAlreadyCompletedException(teamA, teamB);
         }
 

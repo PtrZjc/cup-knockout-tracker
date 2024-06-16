@@ -1,8 +1,6 @@
 package pl.zajacp.tracker.api;
 
-import pl.zajacp.tracker.api.exception.InvalidPenaltyWinnerException;
-import pl.zajacp.tracker.api.exception.InvalidScoreException;
-import pl.zajacp.tracker.api.exception.UnnecessaryPenaltyShootoutException;
+import pl.zajacp.tracker.api.exception.InvalidMatchResultException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -14,8 +12,7 @@ public record MatchResult(
         Optional<Integer> penaltyScoreTeamB,
         LocalDateTime matchDateTime
 ) {
-
-    public final static int MAX_SCORE = 100;
+    public static final int MAX_SCORE = 100;
 
     public static MatchResult of(int scoreTeamA, int scoreTeamB) {
         return new MatchResult(scoreTeamA, scoreTeamB, Optional.empty(), Optional.empty(), LocalDateTime.now());
@@ -26,26 +23,24 @@ public record MatchResult(
     }
 
     public MatchResult {
-        if (scoreTeamA < 0 || scoreTeamB < 0) {
-            throw new InvalidScoreException(MAX_SCORE);
+        if (scoreTeamA < 0 || scoreTeamB < 0 || scoreTeamA > MAX_SCORE || scoreTeamB > MAX_SCORE) {
+            throw new InvalidMatchResultException("Invalid score provided. Score must be between 0 and " + MAX_SCORE + ".");
         }
 
         if (penaltyScoreTeamA.isPresent() || penaltyScoreTeamB.isPresent()) {
             if (scoreTeamA != scoreTeamB) {
-                throw new UnnecessaryPenaltyShootoutException();
-            }
-
-            if (penaltyScoreTeamA.isEmpty() || penaltyScoreTeamB.isEmpty()) {
-                throw new InvalidPenaltyWinnerException("Both penalty scores must be provided.");
-            }
-
-            if (penaltyScoreTeamA.orElse(0) < 0 || penaltyScoreTeamB.orElse(0) < 0) {
-                throw new InvalidPenaltyWinnerException("Penalty scores must be non-negative.");
+                throw new InvalidMatchResultException("Penalty shootout result provided for a match that was not a draw.");
             }
 
             if (penaltyScoreTeamA.equals(penaltyScoreTeamB)) {
-                throw new InvalidPenaltyWinnerException("Penalty shootout must have a distinct winner.");
+                throw new InvalidMatchResultException("Penalty shootout must have a distinct winner.");
             }
+
+            if (penaltyScoreTeamA.isEmpty() || penaltyScoreTeamB.isEmpty() ||
+                    penaltyScoreTeamA.get() < 0 || penaltyScoreTeamB.get() < 0) {
+                throw new InvalidMatchResultException("Invalid penalty scores provided.");
+            }
+
         }
     }
 }

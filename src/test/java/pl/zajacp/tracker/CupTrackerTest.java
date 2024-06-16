@@ -4,8 +4,7 @@ import org.junit.jupiter.api.Test;
 import pl.zajacp.tracker.api.Match;
 import pl.zajacp.tracker.api.MatchResult;
 import pl.zajacp.tracker.api.Team;
-import pl.zajacp.tracker.api.exception.DuplicateTeamsException;
-import pl.zajacp.tracker.api.exception.InvalidTeamCountException;
+import pl.zajacp.tracker.api.exception.InvalidTeamException;
 import pl.zajacp.tracker.api.exception.MatchAlreadyCompletedException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
@@ -50,9 +49,9 @@ import static pl.zajacp.tracker.api.TournamentStage.QUARTER_FINALS;
 import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
 
 
-public class WorldCupTrackerTest {
+public class CupTrackerTest {
 
-    private final WorldCupTracker tracker = new WorldCupTrackerImpl();
+    private final CupTracker tracker = new CupTrackerImpl();
 
     private final static List<Team> INITIAL_TEAMS = List.of(
             BRAZIL, GERMANY,
@@ -70,7 +69,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldInitializeWithSixteenTeams() {
         // when
-        var result = tracker.startWorldCup(INITIAL_TEAMS);
+        var result = tracker.startCup(INITIAL_TEAMS);
 
         // then
         assertThat(result).containsExactly(
@@ -85,16 +84,15 @@ public class WorldCupTrackerTest {
         );
     }
 
-    @Test
-    public void shouldThrowInvalidTeamCountExceptionIfTeamCountNotSixteen() {
+    public void shouldThrowInvalidTeamExceptionIfTeamCountNotSixteen() {
         // when then
-        assertThatThrownBy(() -> tracker.startWorldCup(INITIAL_TEAMS.subList(0, 15)))
-                .isInstanceOf(InvalidTeamCountException.class)
+        assertThatThrownBy(() -> tracker.startCup(INITIAL_TEAMS.subList(0, 15)))
+                .isInstanceOf(InvalidTeamException.class)
                 .hasMessageContaining("Team count must be 16, but was 15");
     }
 
     @Test
-    public void shouldThrowDuplicateTeamsExceptionForDuplicateTeams() {
+    public void shouldThrowInvalidTeamExceptionForDuplicateTeams() {
         // given
         var initialTeamWithDuplicatedFrance = Stream.concat(
                 INITIAL_TEAMS.subList(0, 15).stream(),
@@ -102,15 +100,15 @@ public class WorldCupTrackerTest {
         ).toList();
 
         // when then
-        assertThatThrownBy(() -> tracker.startWorldCup(initialTeamWithDuplicatedFrance))
-                .isInstanceOf(DuplicateTeamsException.class)
+        assertThatThrownBy(() -> tracker.startCup(initialTeamWithDuplicatedFrance))
+                .isInstanceOf(InvalidTeamException.class)
                 .hasMessageContaining("Duplicate teams found in the list. Each team must be unique.");
     }
 
     @Test
     public void shouldRecordValidMatchResult() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS);
+        tracker.startCup(INITIAL_TEAMS);
 
         // when
         tracker.recordMatchResult(BRAZIL, GERMANY, TEAM_A_WINNING_RESULT);
@@ -124,7 +122,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldThrowMatchNotFoundExceptionForNonexistentMatch() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS);
+        tracker.startCup(INITIAL_TEAMS);
 
         // when then
         assertThatThrownBy(() -> tracker.recordMatchResult(BRAZIL, ARGENTINA, TEAM_A_WINNING_RESULT))
@@ -135,7 +133,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldThrowMatchAlreadyCompletedExceptionIfUpdatingFinishedMatch() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS);
+        tracker.startCup(INITIAL_TEAMS);
         tracker.recordMatchResult(BRAZIL, GERMANY, TEAM_A_WINNING_RESULT);
 
         // when then
@@ -147,7 +145,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldCreateQuarterFinalMatchesAfterLastRoundOf16Match() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS)
+        tracker.startCup(INITIAL_TEAMS)
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         // when
@@ -171,7 +169,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldCreateSemiFinalMatchesAfterLastQuarterFinalMatch() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS)
+        tracker.startCup(INITIAL_TEAMS)
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         tracker.getMatches().stream()
@@ -201,7 +199,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldCreateFinalMatchAfterLastSemiFinalMatch() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS)
+        tracker.startCup(INITIAL_TEAMS)
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         tracker.getMatches().stream()
@@ -236,7 +234,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldProvideSummaryOfPlannedMatchesPostInitialization() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS);
+        tracker.startCup(INITIAL_TEAMS);
 
         var expectedSummary = """
                 Stage: Round of 16
@@ -259,7 +257,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldUpdateSummaryOfOngoingQuarterFinal() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS);
+        tracker.startCup(INITIAL_TEAMS);
 
         tracker.recordMatchResult(BRAZIL, GERMANY, MatchResult.of(2, 0));
         tracker.recordMatchResult(FRANCE, ITALY, MatchResult.of(0, 1));
@@ -301,7 +299,7 @@ public class WorldCupTrackerTest {
     @Test
     public void shouldUpdateSummaryOfFinishedWorldCup() {
         // given
-        tracker.startWorldCup(INITIAL_TEAMS);
+        tracker.startCup(INITIAL_TEAMS);
 
         tracker.recordMatchResult(BRAZIL, GERMANY, MatchResult.of(2, 0));
         tracker.recordMatchResult(FRANCE, ITALY, MatchResult.of(0, 1));

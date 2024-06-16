@@ -2,9 +2,9 @@ package pl.zajacp.tracker;
 
 import org.junit.jupiter.api.Test;
 import pl.zajacp.tracker.api.MatchResult;
-import pl.zajacp.tracker.api.exception.InvalidPenaltyWinnerException;
-import pl.zajacp.tracker.api.exception.InvalidScoreException;
-import pl.zajacp.tracker.api.exception.UnnecessaryPenaltyShootoutException;
+import pl.zajacp.tracker.api.exception.InvalidMatchResultException;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,18 +48,6 @@ public class MatchResultTests {
     }
 
     @Test
-    public void shouldThrowInvalidScoreExceptionForNegativeScores() {
-        // given
-        int scoreTeamA = -1;
-        int scoreTeamB = 1;
-
-        // when / then
-        assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB))
-                .isInstanceOf(InvalidScoreException.class)
-                .hasMessageContaining("Invalid score provided");
-    }
-
-    @Test
     public void shouldThrowUnnecessaryPenaltyShootoutExceptionIfNotDraw() {
         // given
         int scoreTeamA = 2;
@@ -69,9 +57,22 @@ public class MatchResultTests {
 
         // when / then
         assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
-                .isInstanceOf(UnnecessaryPenaltyShootoutException.class)
+                .isInstanceOf(InvalidMatchResultException.class)
                 .hasMessageContaining("Penalty shootout result provided for a match that was not a draw");
     }
+
+    @Test
+    public void shouldThrowInvalidScoreExceptionForNegativeScores() {
+        // given
+        int scoreTeamA = -1;
+        int scoreTeamB = 1;
+
+        // when / then
+        assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB))
+                .isInstanceOf(InvalidMatchResultException.class)
+                .hasMessageContaining("Invalid score provided. Score must be between 0 and 100.");
+    }
+
 
     @Test
     public void shouldThrowInvalidPenaltyWinnerExceptionForNegativePenaltyScores() {
@@ -83,7 +84,7 @@ public class MatchResultTests {
 
         // when / then
         assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
-                .isInstanceOf(InvalidPenaltyWinnerException.class)
+                .isInstanceOf(InvalidMatchResultException.class)
                 .hasMessageContaining("Penalty scores must be non-negative");
     }
 
@@ -97,7 +98,20 @@ public class MatchResultTests {
 
         // when / then
         assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
-                .isInstanceOf(InvalidPenaltyWinnerException.class)
+                .isInstanceOf(InvalidMatchResultException.class)
+                .hasMessageContaining("Penalty shootout must have a distinct winner");
+    }
+
+    @Test
+    public void shouldTharowInvalidPenaltyWinnerExceptionIfPenaltyScoresAreEqual() {
+        // given
+        int scoreTeamA = 1;
+        int scoreTeamB = 1;
+        int penaltyScoreTeamB = 3;
+
+        // when / then
+        assertThatThrownBy(() -> new MatchResult(scoreTeamA, scoreTeamB, Optional.empty(), Optional.of(penaltyScoreTeamB), null))
+                .isInstanceOf(InvalidMatchResultException.class)
                 .hasMessageContaining("Penalty shootout must have a distinct winner");
     }
 }
