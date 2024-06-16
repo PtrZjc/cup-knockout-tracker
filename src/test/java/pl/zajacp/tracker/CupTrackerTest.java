@@ -9,13 +9,12 @@ import pl.zajacp.tracker.api.exception.MatchAlreadyCompletedException;
 import pl.zajacp.tracker.api.exception.MatchNotFoundException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static pl.zajacp.tracker.api.MatchStatus.FINISHED;
-import static pl.zajacp.tracker.api.MatchStatus.PLANNED;
 import static pl.zajacp.tracker.api.Team.ARGENTINA;
 import static pl.zajacp.tracker.api.Team.BELGIUM;
 import static pl.zajacp.tracker.api.Team.BRAZIL;
@@ -51,7 +50,7 @@ import static pl.zajacp.tracker.api.TournamentStage.SEMI_FINALS;
 
 public class CupTrackerTest {
 
-    private final CupTracker tracker = new CupTrackerImpl();
+    private final CupTracker tracker = new InMemoryCupTracker();
 
     private final static List<Team> INITIAL_TEAMS = List.of(
             BRAZIL, GERMANY,
@@ -73,17 +72,18 @@ public class CupTrackerTest {
 
         // then
         assertThat(result).containsExactly(
-                new Match(BRAZIL, GERMANY, R_1, PLANNED, null),
-                new Match(ITALY, FRANCE, R_2, PLANNED, null),
-                new Match(SPAIN, ARGENTINA, R_3, PLANNED, null),
-                new Match(ENGLAND, NETHERLANDS, R_4, PLANNED, null),
-                new Match(PORTUGAL, CROATIA, R_5, PLANNED, null),
-                new Match(USA, MEXICO, R_6, PLANNED, null),
-                new Match(BELGIUM, JAPAN, R_7, PLANNED, null),
-                new Match(URUGUAY, SOUTH_KOREA, R_8, PLANNED, null)
+                new Match(BRAZIL, GERMANY, R_1, Optional.empty()),
+                new Match(ITALY, FRANCE, R_2, Optional.empty()),
+                new Match(SPAIN, ARGENTINA, R_3, Optional.empty()),
+                new Match(ENGLAND, NETHERLANDS, R_4, Optional.empty()),
+                new Match(PORTUGAL, CROATIA, R_5, Optional.empty()),
+                new Match(USA, MEXICO, R_6, Optional.empty()),
+                new Match(BELGIUM, JAPAN, R_7, Optional.empty()),
+                new Match(URUGUAY, SOUTH_KOREA, R_8, Optional.empty())
         );
     }
 
+    @Test
     public void shouldThrowInvalidTeamExceptionIfTeamCountNotSixteen() {
         // when then
         assertThatThrownBy(() -> tracker.startCup(INITIAL_TEAMS.subList(0, 15)))
@@ -109,14 +109,17 @@ public class CupTrackerTest {
     public void shouldRecordValidMatchResult() {
         // given
         tracker.startCup(INITIAL_TEAMS);
+        var expectedMatch = new Match(BRAZIL, GERMANY, R_1, Optional.of(TEAM_A_WINNING_RESULT));
 
         // when
-        tracker.recordMatchResult(BRAZIL, GERMANY, TEAM_A_WINNING_RESULT);
+        var updatedMatch = tracker.recordMatchResult(BRAZIL, GERMANY, TEAM_A_WINNING_RESULT);
 
         // then
         assertThat(tracker.getMatches())
                 .filteredOn(match -> match.teamA() == BRAZIL && match.teamB() == GERMANY)
-                .containsExactly(new Match(BRAZIL, GERMANY, R_1, FINISHED, TEAM_A_WINNING_RESULT));
+                .containsExactly(expectedMatch);
+
+        assertThat(updatedMatch).isEqualTo(expectedMatch);
     }
 
     @Test
@@ -153,16 +156,16 @@ public class CupTrackerTest {
 
         // then
         assertThat(initalizedQuarterFinalMatches).hasSize(8 + 4)
-                .filteredOn(match -> match.status() == FINISHED)
+                .filteredOn(Match::isFinished)
                 .hasSize(8);
 
         assertThat(initalizedQuarterFinalMatches)
                 .filteredOn(match -> match.bracketPosition().getStage() == QUARTER_FINALS)
                 .containsExactlyInAnyOrder(
-                        new Match(BRAZIL, ITALY, Q_1, PLANNED, null),
-                        new Match(SPAIN, ENGLAND, Q_2, PLANNED, null),
-                        new Match(PORTUGAL, USA, Q_3, PLANNED, null),
-                        new Match(BELGIUM, URUGUAY, Q_4, PLANNED, null)
+                        new Match(BRAZIL, ITALY, Q_1, Optional.empty()),
+                        new Match(SPAIN, ENGLAND, Q_2, Optional.empty()),
+                        new Match(PORTUGAL, USA, Q_3, Optional.empty()),
+                        new Match(BELGIUM, URUGUAY, Q_4, Optional.empty())
                 );
     }
 
@@ -173,7 +176,7 @@ public class CupTrackerTest {
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         tracker.getMatches().stream()
-                .filter(m -> m.status() == PLANNED)
+                .filter(m -> !m.isFinished())
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         Set<Team> expectedTeamsInSemiFinals = Set.of(BRAZIL, SPAIN, PORTUGAL, BELGIUM);
@@ -183,14 +186,14 @@ public class CupTrackerTest {
 
         // then
         assertThat(initalizedSemiFinalMatches).hasSize(8 + 4 + 2)
-                .filteredOn(match -> match.status() == FINISHED)
+                .filteredOn(Match::isFinished)
                 .hasSize(8 + 4);
 
         assertThat(initalizedSemiFinalMatches)
                 .filteredOn(match -> match.bracketPosition().getStage() == SEMI_FINALS)
                 .hasSize(2) // nondeterministic test result after quarter finals
                 .allSatisfy(match -> {
-                    assertThat(match.status()).isEqualTo(PLANNED);
+                    assertThat(match.isFinished()).isFalse();
                     assertThat(expectedTeamsInSemiFinals).contains(match.teamA());
                     assertThat(expectedTeamsInSemiFinals).contains(match.teamB());
                 });
@@ -203,11 +206,11 @@ public class CupTrackerTest {
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         tracker.getMatches().stream()
-                .filter(m -> m.status() == PLANNED)
+                .filter(m -> !m.isFinished())
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         tracker.getMatches().stream()
-                .filter(m -> m.status() == PLANNED)
+                .filter(m -> !m.isFinished())
                 .forEach(m -> tracker.recordMatchResult(m.teamA(), m.teamB(), TEAM_A_WINNING_RESULT));
 
         Set<Team> expectedTeamsInFinals = Set.of(BRAZIL, SPAIN, PORTUGAL, BELGIUM);
@@ -217,14 +220,14 @@ public class CupTrackerTest {
 
         // then
         assertThat(initalizedFinalMatches).hasSize(8 + 4 + 2 + 2)
-                .filteredOn(match -> match.status() == FINISHED)
+                .filteredOn(Match::isFinished)
                 .hasSize(8 + 4 + 2);
 
         assertThat(initalizedFinalMatches)
                 .filteredOn(match -> match.bracketPosition().getStage() == FINAL)
                 .hasSize(2)  // nondeterministic test result after quarter finals
                 .allSatisfy(match -> {
-                            assertThat(match.status()).isEqualTo(PLANNED);
+                            assertThat(match.isFinished()).isFalse();
                             assertThat(expectedTeamsInFinals).contains(match.teamA());
                             assertThat(expectedTeamsInFinals).contains(match.teamB());
                         }
@@ -236,7 +239,11 @@ public class CupTrackerTest {
         // given
         tracker.startCup(INITIAL_TEAMS);
 
-        var expectedSummary = """
+        // when
+        var summary = tracker.getCupSummary();
+
+        // then
+        assertThat(summary).isEqualTo("""
                 Stage: Round of 16
                 - Brazil vs Germany (upcoming)
                 - France vs Italy (upcoming)
@@ -245,13 +252,7 @@ public class CupTrackerTest {
                 - Croatia vs Portugal (upcoming)
                 - Mexico vs USA (upcoming)
                 - Belgium vs Japan (upcoming)
-                - South Korea vs Uruguay (upcoming)""";
-
-        // when
-        var summary = tracker.getWorldCupSummary();
-
-        // then
-        assertThat(summary).isEqualTo(expectedSummary);
+                - South Korea vs Uruguay (upcoming)""");
     }
 
     @Test
@@ -271,7 +272,11 @@ public class CupTrackerTest {
         tracker.recordMatchResult(ENGLAND, SPAIN, MatchResult.of(1, 2));
         tracker.recordMatchResult(PORTUGAL, USA, MatchResult.of(2, 1));
 
-        var expectedSummary = """
+        // when
+        var summary = tracker.getCupSummary();
+
+        // then
+        assertThat(summary).isEqualTo("""
                 Stage: Quarter-finals
                 - Brazil vs Italy (upcoming)
                 - England 1 vs Spain 2
@@ -286,18 +291,12 @@ public class CupTrackerTest {
                 - Croatia 1 vs Portugal 2
                 - Mexico 1 vs USA 1 (USA wins on penalties 4-3)
                 - Belgium 1 vs Japan 0
-                - South Korea 2 vs Uruguay 3""";
-
-        // when
-        var summary = tracker.getWorldCupSummary();
-
-        // then
-        assertThat(summary).isEqualTo(expectedSummary);
+                - South Korea 2 vs Uruguay 3""");
     }
 
 
     @Test
-    public void shouldUpdateSummaryOfFinishedWorldCup() {
+    public void shouldUpdateSummaryOfFinishedCup() {
         // given
         tracker.startCup(INITIAL_TEAMS);
 
@@ -321,7 +320,11 @@ public class CupTrackerTest {
         tracker.recordMatchResult(BRAZIL, PORTUGAL, MatchResult.of(2, 1));
         tracker.recordMatchResult(SPAIN, URUGUAY, MatchResult.of(2, 1));
 
-        var expectedSummary = """
+        // when
+        var summary = tracker.getCupSummary();
+
+        // then
+        assertThat(summary).isEqualTo("""
                 Stage: Final
                 - Brazil 2 vs Portugal 1
                 - Spain 2 vs Uruguay 1, 3rd place match
@@ -344,12 +347,6 @@ public class CupTrackerTest {
                 - Croatia 1 vs Portugal 2
                 - Mexico 1 vs USA 1 (USA wins on penalties 4-3)
                 - Belgium 1 vs Japan 0
-                - South Korea 2 vs Uruguay 3""";
-
-        // when
-        var summary = tracker.getWorldCupSummary();
-
-        // then
-        assertThat(summary).isEqualTo(expectedSummary);
+                - South Korea 2 vs Uruguay 3""");
     }
 }

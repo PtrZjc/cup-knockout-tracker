@@ -43,4 +43,14 @@ public record MatchResult(
 
         }
     }
+
+    public MatchResult inverted() {
+        return new MatchResult(
+                scoreTeamB,
+                scoreTeamA,
+                penaltyScoreTeamB,
+                penaltyScoreTeamA,
+                matchDateTime
+        );
+    }
 }

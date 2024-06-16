@@ -67,7 +67,7 @@ public class CupTrackerImpl implements CupTracker {
         var matchKey = new MatchKey(teamA, teamB);
         if (matches.containsKey(matchKey.inverted())) {
             matchKey = matchKey.inverted();
-            matchResult = invert(matchResult);
+            matchResult = matchResult.inverted();
         }
         var match = Optional.ofNullable(matches.get(matchKey));
         if (match.isEmpty()) {
@@ -76,10 +76,10 @@ public class CupTrackerImpl implements CupTracker {
         if (match.get().status() == MatchStatus.FINISHED) {
             throw new MatchAlreadyCompletedException(teamA, teamB);
         }
-
-        var finishedMatch = matches.put(matchKey, match.get().finishWithResult(matchResult));
+        var updatedMatch = match.get().finishWithResult(matchResult);
+        matches.put(matchKey, updatedMatch);
         recalculateTournamentStage();
-        return finishedMatch;
+        return updatedMatch;
     }
 
     @Override
@@ -164,13 +164,12 @@ public class CupTrackerImpl implements CupTracker {
 
     private String printMatchSummaryLine(Match match) {
         match = orderTeamsAlphabetically(match);
-        boolean matchFinished = match.status() == MatchStatus.FINISHED;
 
         return "- %s%s vs %s%s%s%s%s".formatted(
                 match.teamA().getPrintName(),
-                matchFinished ? " " + match.finishedMatchResult().scoreTeamA() : "",
+                match.finishedMatchResult().isPresent() ? " " + match.finishedMatchResult().get().scoreTeamA() : "",
                 match.teamB().getPrintName(),
-                matchFinished ? " " + match.finishedMatchResult().scoreTeamB() : "",
+                match.finishedMatchResult().isPresent() ? " " + match.finishedMatchResult().get().scoreTeamB() : "",
                 match.bracketPosition() == F_THIRD_PLACE ? ", 3rd place match" : "",
                 match.status() == MatchStatus.PLANNED ? " (upcoming)" : "",
                 printPossiblePenaltyInfo(match)
@@ -178,19 +177,17 @@ public class CupTrackerImpl implements CupTracker {
     }
 
     private Match orderTeamsAlphabetically(Match match) {
-        return match.teamA().name().compareTo(match.teamB().name()) > 0
-                ? new Match(match.teamB(), match.teamA(), match.bracketPosition(), match.status(), invert(match.finishedMatchResult()))
-                : match;
+        return match.teamA().name().compareTo(match.teamB().name()) > 0 ? match.inverted() : match;
     }
 
     private String printPossiblePenaltyInfo(Match match) {
-        boolean shouldPrint = match.finishedMatchResult() != null &&
-                match.finishedMatchResult().penaltyScoreTeamA().isPresent();
+        boolean shouldPrint = match.finishedMatchResult().isPresent() &&
+                match.finishedMatchResult().get().penaltyScoreTeamA().isPresent();
 
         if (!shouldPrint) return "";
 
-        int penaltyScoreTeamA = match.finishedMatchResult().penaltyScoreTeamA().get();
-        int penaltyScoreTeamB = match.finishedMatchResult().penaltyScoreTeamB().get();
+        int penaltyScoreTeamA = match.finishedMatchResult().get().penaltyScoreTeamA().get();
+        int penaltyScoreTeamB = match.finishedMatchResult().get().penaltyScoreTeamB().get();
         return " (%s wins on penalties %s-%s)".formatted(
                 match.getWinner().getPrintName(),
                 Math.max(penaltyScoreTeamA, penaltyScoreTeamB),
@@ -203,15 +200,6 @@ public class CupTrackerImpl implements CupTracker {
                 .map(Match::getLoser)
                 .toList();
         return Match.of(thirdPlaceTeams.get(0), thirdPlaceTeams.get(1), F_THIRD_PLACE);
-    }
-
-    private MatchResult invert(MatchResult result) {
-        return result == null ? null :
-                new MatchResult(result.scoreTeamB(),
-                        result.scoreTeamA(),
-                        result.penaltyScoreTeamB(),
-                        result.penaltyScoreTeamA(),
-                        result.matchDateTime());
     }
 
     private record MatchKey(Team teamA, Team teamB) {

@@ -5,6 +5,8 @@ import pl.zajacp.tracker.api.Match;
 import pl.zajacp.tracker.api.MatchResult;
 import pl.zajacp.tracker.api.exception.IllegalMatchException;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static pl.zajacp.tracker.api.MatchStatus.FINISHED;
@@ -21,7 +23,7 @@ public class MatchTest {
         Match match = Match.of(FRANCE, BRAZIL, R_1);
 
         // then
-        assertThat(match).isEqualTo(new Match(FRANCE, BRAZIL, R_1, PLANNED, null));
+        assertThat(match).isEqualTo(new Match(FRANCE, BRAZIL, R_1, PLANNED, Optional.empty()));
     }
 
     @Test
@@ -35,13 +37,13 @@ public class MatchTest {
 
         // then
         assertThat(finishedMatch).isNotEqualTo(match);
-        assertThat(finishedMatch).isEqualTo(new Match(FRANCE, BRAZIL, R_1, FINISHED, matchResult));
+        assertThat(finishedMatch).isEqualTo(new Match(FRANCE, BRAZIL, R_1, FINISHED, Optional.of(matchResult)));
     }
 
     @Test
     public void shouldThrowIllegalMatchExceptionIfFinishedMatchWithoutResult() {
         // when / then
-        assertThatThrownBy(() -> new Match(FRANCE, BRAZIL, R_1, FINISHED, null))
+        assertThatThrownBy(() -> new Match(FRANCE, BRAZIL, R_1, FINISHED, Optional.empty()))
                 .isInstanceOf(IllegalMatchException.class)
                 .hasMessageContaining("Match is finished but no result provided");
     }

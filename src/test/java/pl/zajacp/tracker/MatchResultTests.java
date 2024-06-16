@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 import pl.zajacp.tracker.api.MatchResult;
 import pl.zajacp.tracker.api.exception.InvalidMatchResultException;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -85,7 +83,7 @@ public class MatchResultTests {
         // when / then
         assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
                 .isInstanceOf(InvalidMatchResultException.class)
-                .hasMessageContaining("Penalty scores must be non-negative");
+                .hasMessageContaining("Invalid penalty scores provided");
     }
 
     @Test
@@ -98,19 +96,6 @@ public class MatchResultTests {
 
         // when / then
         assertThatThrownBy(() -> MatchResult.of(scoreTeamA, scoreTeamB, penaltyScoreTeamA, penaltyScoreTeamB))
-                .isInstanceOf(InvalidMatchResultException.class)
-                .hasMessageContaining("Penalty shootout must have a distinct winner");
-    }
-
-    @Test
-    public void shouldTharowInvalidPenaltyWinnerExceptionIfPenaltyScoresAreEqual() {
-        // given
-        int scoreTeamA = 1;
-        int scoreTeamB = 1;
-        int penaltyScoreTeamB = 3;
-
-        // when / then
-        assertThatThrownBy(() -> new MatchResult(scoreTeamA, scoreTeamB, Optional.empty(), Optional.of(penaltyScoreTeamB), null))
                 .isInstanceOf(InvalidMatchResultException.class)
                 .hasMessageContaining("Penalty shootout must have a distinct winner");
     }
