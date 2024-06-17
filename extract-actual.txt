@@ -1,0 +1,15 @@
+Stage: Quarter-finals
+  - Brazil vs Italy (upcoming)
+  - England 1 vs Spain 2
+  - Portugal 2 vs USA 1
+  - Belgium vs Uruguay (upcoming)
+
+  Stage: Round of 16
+  - Brazil 2 vs Germany 0
+  - France 0 vs Italy 1
+  - Argentina 1 vs Spain 1 (Spain wins on penalties 3-2)
+  - England 3 vs Netherlands 2
+  - Croatia 1 vs Portugal 2
+  - Mexico 1 vs USA 1 (USA wins on penalties 4-3)
+  - Belgium 1 vs Japan 0
+  - South Korea 2 vs Uruguay 3
